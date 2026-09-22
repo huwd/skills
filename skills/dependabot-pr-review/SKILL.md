@@ -123,7 +123,7 @@ curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/rules/branches/<BASE>" \
 | jq -c "[.[] | select(.type == \"required_linear_history\" or .type == \"pull_request\") | {type, methods: .parameters.allowed_merge_methods}]"
 ```
 
-Merge a safe PR, with `<METHOD>` chosen per Merge Behavior (`rebase`, `squash`, or `merge`):
+After explicit user approval, merge the PR with `<METHOD>` chosen per Merge Behavior (`rebase`, `squash`, or `merge`):
 
 ```bash
 jq -n "{merge_method: \"<METHOD>\"}" \
@@ -134,7 +134,7 @@ jq -n "{merge_method: \"<METHOD>\"}" \
     --data-binary @-
 ```
 
-Request a Dependabot rebase:
+Request a Dependabot rebase after explicit user approval:
 
 ```bash
 printf "%s" "@dependabot rebase" \
@@ -175,10 +175,10 @@ gh repo view <OWNER/REPO> --json rebaseMergeAllowed,squashMergeAllowed,mergeComm
 gh api repos/<OWNER/REPO>/rules/branches/<BASE> \
   --jq '[.[] | select(.type == "required_linear_history" or .type == "pull_request") | {type, methods: .parameters.allowed_merge_methods}]'
 
-# Merge, with --rebase, --squash, or --merge chosen per Merge Behavior
+# Merge after explicit user approval, with --rebase, --squash, or --merge per Merge Behavior
 gh pr merge <NUMBER> --repo <OWNER/REPO> --rebase
 
-# Request Dependabot rebase
+# Request Dependabot rebase after explicit user approval
 gh pr comment <NUMBER> --repo <OWNER/REPO> --body "@dependabot rebase"
 ```
 
@@ -231,14 +231,16 @@ For grouped PRs, assess every package. If one package requires escalation or hol
 
 ### 2. Apply Hard Gates
 
+Gates decide the verdict. They never trigger an action by themselves; see Actions Require Approval.
+
 CI is a hard gate:
 
-- Required CI failed: do not merge. Comment with the failing job and block reason.
-- Required CI pending: wait; do not merge on partial green.
-- Advisory-driven PR with CI passing: merge on the advisory fast path. Do not wait for cooldown.
-- Advisory-driven PR with CI failing: block and tag @huwd.
+- Required CI failed: verdict `Hold`. Name the failing job and block reason in the review.
+- Required CI pending: verdict `Hold` until it finishes; do not treat partial green as passing.
+- Advisory-driven PR with CI passing: verdict `Merge` on the advisory fast path, without waiting for cooldown. List it first and offer to merge it now.
+- Advisory-driven PR with CI failing: verdict `Hold`, flagged for @huwd as urgent.
 
-Routine updates require cooldown. If cooldown is absent, do not merge automatically; ask for or raise a PR to add it and tag @huwd.
+Routine updates require cooldown. If cooldown is absent, verdict `Hold` and flag it for @huwd; offer to raise a PR that adds it.
 
 ### 3. Review Upstream Changes
 
@@ -323,6 +325,17 @@ For one PR:
 
 For audit mode, keep each PR detail to roughly 15-25 lines and put the summary table first.
 
+## Actions Require Approval
+
+The review itself is read-only. Every write to GitHub needs explicit user approval first:
+
+- posting a review comment, including a comment explaining a failed CI gate
+- merging a PR
+- requesting `@dependabot rebase`
+- opening a PR, such as one that adds a cooldown
+
+After the report, list the proposed actions per PR and ask once, for example `Proposed: merge #12, #15; request rebase on #18. Go ahead? (yes / no / selective)`. A verdict of `Merge` is a recommendation, not approval. Approval covers only the actions and PRs named; ask again for anything new, such as a rebase needed after an earlier merge.
+
 ## Posting Findings to PRs
 
 Always ask before posting. Never comment automatically.
@@ -379,7 +392,7 @@ A method is allowed only if the repo setting permits it and every active `pull_r
 gh pr merge <NUMBER> --repo <OWNER/REPO> --rebase
 ```
 
-After merging one Dependabot PR in a batch, remaining Dependabot PRs may need rebasing. Request it with the selected command set, then re-check CI before any further merge. For `gh` fallback:
+Merge only PRs the user approved. After merging one Dependabot PR in a batch, remaining Dependabot PRs may need rebasing. Ask before requesting it with the selected command set, then re-check CI before any further merge. For `gh` fallback:
 
 ```bash
 gh pr comment <NUMBER> --repo <OWNER/REPO> --body "@dependabot rebase"
@@ -391,4 +404,4 @@ gh pr comment <NUMBER> --repo <OWNER/REPO> --body "@dependabot rebase"
 - Do not merge PRs with failed or pending required CI.
 - Do not treat missing cooldown as acceptable for routine updates.
 - Do not perform speculative compatibility analysis when changelog evidence suggests a breaking change; escalate or hold with concrete concerns.
-- Do not post comments without explicit user approval.
+- Do not comment, merge, request rebases, or open PRs without explicit user approval.
