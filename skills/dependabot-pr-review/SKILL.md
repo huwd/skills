@@ -1,6 +1,14 @@
 ---
 name: dependabot-pr-review
-description: Review Dependabot pull requests in a repository. Use when asked to assess, triage, comment on, approve, merge, or decide what to do with one Dependabot PR, all open Dependabot PRs, or dependency update PRs.
+description: >-
+  Review Dependabot dependency-update pull requests and give each a Merge, Verify, Investigate,
+  or Hold verdict covering upstream changes, breaking changes, CI state, and codebase impact.
+  Works across ecosystems such as npm, RubyGems, PyPI, Go modules, Cargo, and GitHub Actions.
+  Use when the user pastes a Dependabot PR URL, names a PR titled like "Bump <package> from
+  <old> to <new>", asks whether a dependency upgrade is safe to merge, or wants to comment on,
+  approve, or merge one. Also use in audit mode when the user asks to review, triage, or audit
+  all open Dependabot PRs, for example "check dependabot", "which dep PRs can we merge", or
+  "go through the open dependency updates".
 license: MIT (see LICENSE)
 metadata:
   source: Adapted from https://github.com/thoughtbot/dependabot-review-skill-thoughtbot (MIT, Jose Blanco and thoughtbot, inc.)
@@ -129,6 +137,20 @@ curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/issues/<NUMBER>/comments?
 | jq -r ".[].body" | grep -q "dependabot-audit:v1"
 ```
 
+To replace an earlier review, find its comment ID by the marker, then delete it after explicit user approval:
+
+```bash
+# Paginated: increment page=1,2,... until no results.
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/issues/<NUMBER>/comments?per_page=100&page=1" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+| jq -r ".[] | select(.body | contains(\"dependabot-audit:v1\")) | .id"
+
+curl -fsS -X DELETE "https://api.github.com/repos/<OWNER>/<REPO>/issues/comments/<COMMENT_ID>" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28"
+```
+
 Post a review comment only after explicit user approval, from a file made with `mktemp`:
 
 ```bash
@@ -206,6 +228,11 @@ gh pr checks <NUMBER> --repo <OWNER/REPO>
 # Check for an existing review marker
 gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | grep -q 'dependabot-audit:v1'
 
+# Find an earlier review comment's ID, and delete it after explicit user approval
+gh api --paginate repos/<OWNER/REPO>/issues/<NUMBER>/comments \
+  --jq '.[] | select(.body | contains("dependabot-audit:v1")) | .id'
+gh api --method DELETE repos/<OWNER/REPO>/issues/comments/<COMMENT_ID>
+
 # Post a review comment after explicit user approval
 gh pr comment <NUMBER> --repo <OWNER/REPO> --body-file "$BODY_FILE"
 
@@ -227,7 +254,7 @@ gh pr comment <NUMBER> --repo <OWNER/REPO> --body "@dependabot rebase"
 
 2. List open Dependabot PRs using the selected command set.
 
-If none are open, say so and stop. If the number of open PRs is at or near `open-pull-requests-limit` in `.github/dependabot.yml`, call out queue saturation because it can block new updates, including security PRs.
+If none are open, say `No open Dependabot PRs in <repo>.` and stop. Otherwise, before analyzing, tell the user in one line: `Found N open Dependabot PRs in <repo>. Analyzing each now…` If the number of open PRs is at or near `open-pull-requests-limit` in `.github/dependabot.yml`, call out queue saturation because it can block new updates, including security PRs.
 
 3. Analyze each PR with the single-PR workflow. Fetch independent PRs in parallel where the harness allows.
 
@@ -407,6 +434,7 @@ For audit mode, keep each PR detail to roughly 15-25 lines and put the summary t
 The review itself is read-only. Every write to GitHub needs explicit user approval first:
 
 - posting a review comment, including a comment explaining a failed CI gate
+- deleting an earlier review comment to replace it
 - merging a PR
 - requesting `@dependabot rebase`
 - closing a PR
@@ -416,10 +444,13 @@ After the report, list the proposed actions per PR and ask once, for example `Pr
 
 ## Posting Findings to PRs
 
-Always ask before posting. Never comment automatically.
+Always ask before posting. Never comment automatically. Offering to post is part of the proposed actions in Actions Require Approval, so ask in that same prompt:
 
 - Single PR: `Want me to post this review as a comment on PR #<number>? (yes / no)`
 - Audit mode: `Want me to post each PR review as a comment on its PR? (yes / no / selective)`
+  - **yes**: post on every PR reviewed.
+  - **no**: stop; the report in chat is the only output.
+  - **selective**: ask which PR numbers, then post on those only.
 
 Use the selected command set. Write each comment to a new file from `mktemp` rather than a fixed path, which other users on a shared machine could read or replace. For API mode, use the API comment command from the API command set. For `gh` fallback, use `--body-file` so markdown survives shell quoting:
 
@@ -433,7 +464,7 @@ Before posting, check for an existing review marker using the selected command s
 gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | grep -q 'dependabot-audit:v1'
 ```
 
-If a prior marker exists, ask whether to skip or repost. Default to skipping if the user does not specify. Delete each comment file after posting.
+If a prior marker exists, say so when asking, for example `PR #123 already has a review comment. Skip, replace, or post another? (skip / replace / post)`. Default to skipping if the user does not specify. **Replace** deletes the earlier comment, found by its marker, and posts the new one, so the current review sits at the end of the PR timeline. Delete each comment file after posting.
 
 Use this comment shape:
 
@@ -454,7 +485,12 @@ Use this comment shape:
 <!-- dependabot-audit:v1 -->
 ```
 
-Do not add attribution or a generated-by signature. If commenting fails for one PR, report it and continue with the rest.
+Do not add attribution or a generated-by signature. If commenting fails for one PR, for example because of permissions, a locked PR, or rate limiting, report it and continue with the rest.
+
+After posting, confirm in one line:
+
+- Single PR: `Posted comment on #<number>.`
+- Audit mode: `Posted N comments: #12, #15. Skipped M: #18 (had a prior review).`
 
 ## Merge Behavior
 
