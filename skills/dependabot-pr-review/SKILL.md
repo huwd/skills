@@ -249,7 +249,9 @@ Keep the `Why` column concrete and short. Do not add columns; put extra details 
 
 Fetch PR metadata, CI status, changed files, and diff using the selected command set: API first if the ping succeeded, otherwise `gh` fallback.
 
-Also read `.github/dependabot.yml`. Confirm a cooldown such as `cooldown: 7` exists for the relevant ecosystem. For routine updates, missing cooldown blocks auto-merge and should be flagged to @huwd.
+Identify the **maintainer** to flag problems to: the owners that `CODEOWNERS` (in `.github/`, the repo root, or `docs/`) assigns to the changed manifests or lockfiles, otherwise the repository owner. Mention them by handle in the review; mention them in a PR comment only if the user approves posting it.
+
+Also read `.github/dependabot.yml`. Confirm a cooldown such as `cooldown: 7` exists for the relevant ecosystem. For routine updates, missing cooldown blocks auto-merge and should be flagged to the maintainer.
 
 Extract for each package:
 
@@ -293,9 +295,9 @@ CI is a hard gate. Work out whether required CI passed, failed, or is pending as
 - Required CI failed: verdict `Hold`. Name the failing job and block reason in the review.
 - Required CI pending: verdict `Hold` until it finishes; do not treat partial green as passing.
 - Advisory-driven PR with CI passing: verdict `Merge` on the advisory fast path, without waiting for cooldown. List it first and offer to merge it now.
-- Advisory-driven PR with CI failing: verdict `Hold`, flagged for @huwd as urgent.
+- Advisory-driven PR with CI failing: verdict `Hold`, flagged to the maintainer as urgent.
 
-Routine updates require cooldown. If cooldown is absent, verdict `Hold` and flag it for @huwd; offer to raise a PR that adds it.
+Routine updates require cooldown. If cooldown is absent, verdict `Hold` and flag it to the maintainer; offer to raise a PR that adds it.
 
 ### 4. Review Upstream Changes
 
