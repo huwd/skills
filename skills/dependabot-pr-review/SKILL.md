@@ -76,10 +76,29 @@ curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/pulls/<NUMBER>" \
   -H "X-GitHub-Api-Version: 2022-11-28"
 ```
 
-Check CI using the PR head SHA:
+Check CI (see Determine CI Status). Read the merge state and base branch from the PR, and the required checks from the base branch rules and legacy branch protection:
 
 ```bash
-curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/commits/<HEAD_SHA>/check-runs" \
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/pulls/<NUMBER>" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+| jq -r "[.mergeable, .mergeable_state, .base.ref, .head.sha] | @tsv"
+
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/rules/branches/<BASE>" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+| jq -c "[.[] | select(.type == \"required_status_checks\") | .parameters.required_status_checks[].context]"
+
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/branches/<BASE>" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+| jq -c ".protection.required_status_checks.contexts"
+```
+
+Then list every check run and commit status on the PR head SHA:
+
+```bash
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/commits/<HEAD_SHA>/check-runs?per_page=100" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
 | jq -r ".check_runs[] | [.name, .status, .conclusion] | @tsv"
@@ -159,10 +178,16 @@ gh pr list --author "app/dependabot" --state open \
   --json number,title,url,createdAt,headRefName,labels \
   --limit 100
 
-# Fetch PR metadata, checks, and diff
-gh pr view <NUMBER> --repo <OWNER/REPO> --json title,body,url,files,headRefName,createdAt,labels
-gh pr checks <NUMBER> --repo <OWNER/REPO>
+# Fetch PR metadata and diff
+gh pr view <NUMBER> --repo <OWNER/REPO> --json title,body,url,files,headRefName,baseRefName,createdAt,labels
 gh pr diff <NUMBER> --repo <OWNER/REPO>
+
+# Check CI: merge state, required checks, then every check
+gh pr view <NUMBER> --repo <OWNER/REPO> --json mergeable,mergeStateStatus
+gh api repos/<OWNER/REPO>/rules/branches/<BASE> \
+  --jq '[.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context]'
+gh api repos/<OWNER/REPO>/branches/<BASE> --jq '.protection.required_status_checks.contexts'
+gh pr checks <NUMBER> --repo <OWNER/REPO>
 
 # Check for an existing review marker
 gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | rg 'dependabot-audit:v1'
@@ -229,11 +254,32 @@ Extract for each package:
 
 For grouped PRs, assess every package. If one package requires escalation or hold, the whole PR inherits that concern.
 
-### 2. Apply Hard Gates
+### 2. Determine CI Status
+
+Do not judge CI from the check list alone. It only shows checks that have started, so a required check that has not reported yet looks green, and a failing optional check looks like a blocker. Combine three things, using the selected command set:
+
+- **Required checks**: contexts from the base branch's `required_status_checks` rule, plus any legacy branch protection contexts. The rules endpoint returns 403 on private repos whose plan lacks rulesets; treat that as "required checks unknown".
+- **Merge state**: `mergeable_state` from the API, or `mergeStateStatus` from `gh`.
+- **Every check run and commit status** on the head SHA. `success`, `neutral`, and `skipped` count as passing. `failure`, `cancelled`, `timed_out`, `action_required`, `startup_failure`, and `stale` count as failing. `queued` or `in_progress` count as pending.
+
+**When required checks are configured**, read the merge state:
+
+| Merge state | Required CI | Notes |
+|-------------|-------------|-------|
+| `clean` | passed | |
+| `unstable` | passed | Non-required checks are failing or pending. Name them in the review; they do not block by themselves. |
+| `blocked` | failed or pending | Compare the required list with the check runs. A required check that failed means failed; one that is missing, queued, or in progress means pending. If every required check passed, the block is a missing review or other rule; say which. |
+| `behind` | as for `clean`/`unstable` | The base branch moved on. Merging needs an update first; propose `@dependabot rebase`. |
+| `dirty` | n/a | Merge conflict. Verdict `Hold`; Dependabot usually rebases on its own. |
+| `unknown` | unverified | GitHub is still computing. Refetch after a few seconds. If it stays unknown, do not give a `Merge` verdict. |
+
+**When no required checks are configured, or they cannot be read**, the merge state says nothing about CI: `clean` and `unstable` look the same to GitHub. Treat every check run and commit status as required. Any failure means failed, and anything queued or in progress means pending. Note in the review that the repo has no required status checks, because nothing stops a failing PR being merged there.
+
+### 3. Apply Hard Gates
 
 Gates decide the verdict. They never trigger an action by themselves; see Actions Require Approval.
 
-CI is a hard gate:
+CI is a hard gate. Work out whether required CI passed, failed, or is pending as described in Determine CI Status, then:
 
 - Required CI failed: verdict `Hold`. Name the failing job and block reason in the review.
 - Required CI pending: verdict `Hold` until it finishes; do not treat partial green as passing.
@@ -242,7 +288,7 @@ CI is a hard gate:
 
 Routine updates require cooldown. If cooldown is absent, verdict `Hold` and flag it for @huwd; offer to raise a PR that adds it.
 
-### 3. Review Upstream Changes
+### 4. Review Upstream Changes
 
 Read changelog, release notes, migration guide, or commit titles for the exact version range. Try sources in this order when relevant to the ecosystem:
 
@@ -261,7 +307,7 @@ Prioritize findings in this order:
 
 If no changelog is findable, say so explicitly. Do not invent release notes.
 
-### 4. Check Codebase Impact
+### 5. Check Codebase Impact
 
 Search actual usage before deciding risk. Prefer ecosystem-aware search, then broad text search:
 
@@ -276,7 +322,7 @@ Flag extra scrutiny for auth, cryptography, network/HTTP, payment, database, fra
 
 For related package families, avoid merging one PR while siblings remain stale or unreviewed. Common examples include React/React DOM, React Router packages, TypeScript/ESLint packages, Vitest/Playwright packages, Tailwind/plugin pairs, Storybook packages, Cloudflare/Wrangler packages, and similar ecosystem families discovered from the repo.
 
-### 5. Assign a Verdict
+### 6. Assign a Verdict
 
 Use these exact verdicts:
 
