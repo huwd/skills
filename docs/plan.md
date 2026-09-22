@@ -193,25 +193,28 @@ actions (comment, merge, rebase).
 
 ### Fix
 
-- [ ] **Remove personal hardcoding.** Replace `@huwd` with "the repo's
-      CODEOWNERS or maintainer", resolved at runtime.
-- [ ] **Gate every write action on approval**, not just comments. Merge and
-      `@dependabot rebase` currently read as automatic on the advisory fast
-      path. Make one approval rule cover all three.
-- [ ] **Progressive disclosure.** Move the API and `gh` command sets and the
-      output templates into `references/`. Target a `SKILL.md` under ~250
-      lines.
-- [ ] Replace `/tmp/dep-review-*.md` with `mktemp`, since the path is
-      predictable on shared machines.
-- [ ] Declare real requirements in `compatibility` (`curl`, `jq`, `gh`, `rg`
-      with a `grep` fallback).
-- [ ] Add a `metadata` provenance note ("adapted from
-      thoughtbot/dependabot-review-skill-thoughtbot, MIT") and check the
-      licence obligations.
+Done on the `fix/dependabot-review-*` and `feat/dependabot-review-structure`
+branches:
+
+- [x] **Remove personal hardcoding.** `@huwd` replaced by the maintainer from
+      CODEOWNERS, falling back to the repo owner.
+- [x] **Gate every write action on approval**: comment, delete, merge,
+      rebase, close, and opening PRs.
+- [x] **Progressive disclosure.** Command sets and output formats in
+      `references/`; `SKILL.md` is 245 lines.
+- [x] `mktemp` instead of predictable `/tmp` paths; `grep` instead of `rg`.
+- [x] Declare requirements in `compatibility`.
+- [x] Provenance in `metadata`, the skill README, and a skill-level `LICENSE`
+      carrying thoughtbot's MIT notice.
+- [x] Also fixed from the pre-push review: linear-history merges, CI judged
+      against required checks, untrusted PR content, valid cooldown syntax,
+      a relaxable cooldown rule, and defined ignore-rule and workspace-split
+      holds.
 - [ ] Write evals: 5–10 prompts that should trigger the skill and 5 that
       shouldn't, plus a fixture repo with a few Dependabot PRs (patch dev-dep,
-      major runtime, failing CI, missing cooldown, advisory) and expected
-      verdicts.
+      major runtime, failing CI, missing cooldown, advisory, a PR body with
+      an injected instruction) and expected verdicts.
+- [ ] Update `docs/skill-format.md` with this skill as the worked example.
 
 **Done when:** the skill passes the phase-2 CI, the evals give the expected
 verdicts on the fixture, and `docs/skill-format.md` describes the format with
