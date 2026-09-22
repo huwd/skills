@@ -72,7 +72,8 @@ curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/issues/<NUMBER>" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28"
 
-curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/pulls/<NUMBER>/files?per_page=100" \
+# Paginated: increment page=1,2,... until no results.
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/pulls/<NUMBER>/files?per_page=100&page=1" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28"
 ```
@@ -107,7 +108,8 @@ curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/branches/<BASE>" \
 Then list every check run and commit status on the PR head SHA:
 
 ```bash
-curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/commits/<HEAD_SHA>/check-runs?per_page=100" \
+# Paginated: increment page=1,2,... until no results.
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/commits/<HEAD_SHA>/check-runs?per_page=100&page=1" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
 | jq -r ".check_runs[] | [.name, .status, .conclusion] | @tsv"
@@ -120,16 +122,19 @@ curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/commits/<HEAD_SHA>/status
 Check for an existing review marker:
 
 ```bash
-curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/issues/<NUMBER>/comments?per_page=100" \
+# Paginated: check every page until the marker is found or no results remain.
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/issues/<NUMBER>/comments?per_page=100&page=1" \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-| jq -r ".[].body" | rg "dependabot-audit:v1"
+| jq -r ".[].body" | grep -q "dependabot-audit:v1"
 ```
 
-Post a review comment only after explicit user approval:
+Post a review comment only after explicit user approval, from a file made with `mktemp`:
 
 ```bash
-jq -Rs "{body: .}" /tmp/dep-review-<NUMBER>.md \
+BODY_FILE="$(mktemp)"
+# write the comment to "$BODY_FILE", then:
+jq -Rs "{body: .}" "$BODY_FILE" \
 | curl -fsS -X POST "https://api.github.com/repos/<OWNER>/<REPO>/issues/<NUMBER>/comments" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -199,10 +204,10 @@ gh api repos/<OWNER/REPO>/branches/<BASE> --jq '.protection.required_status_chec
 gh pr checks <NUMBER> --repo <OWNER/REPO>
 
 # Check for an existing review marker
-gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | rg 'dependabot-audit:v1'
+gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | grep -q 'dependabot-audit:v1'
 
 # Post a review comment after explicit user approval
-gh pr comment <NUMBER> --repo <OWNER/REPO> --body-file /tmp/dep-review-<NUMBER>.md
+gh pr comment <NUMBER> --repo <OWNER/REPO> --body-file "$BODY_FILE"
 
 # Check allowed merge methods
 gh repo view <OWNER/REPO> --json rebaseMergeAllowed,squashMergeAllowed,mergeCommitAllowed
@@ -229,7 +234,7 @@ If none are open, say so and stop. If the number of open PRs is at or near `open
 4. Produce a consolidated report:
 
 - Preamble: `Reviewed N open Dependabot PRs in <repo>.`
-- Summary table, sorted by `Merge`, `Verify`, `Investigate`, `Hold`; within each bucket, oldest first. Security PRs go first regardless of bucket.
+- Summary table, sorted by `Merge`, `Verify`, `Investigate`, `Hold`; within each bucket, oldest first. Advisory-driven PRs go first regardless of bucket, with `🔒` before their `Type`, for example `🔒 patch`.
 - Details section, one compact subsection per PR.
 - Overall recommendation grouped by verdict, with related package families called out as sets.
 
@@ -416,19 +421,19 @@ Always ask before posting. Never comment automatically.
 - Single PR: `Want me to post this review as a comment on PR #<number>? (yes / no)`
 - Audit mode: `Want me to post each PR review as a comment on its PR? (yes / no / selective)`
 
-Use the selected command set. For API mode, write the comment to `/tmp/dep-review-<NUMBER>.md` and use the API comment command from the API command set. For `gh` fallback, use `--body-file` so markdown survives shell quoting:
+Use the selected command set. Write each comment to a new file from `mktemp` rather than a fixed path, which other users on a shared machine could read or replace. For API mode, use the API comment command from the API command set. For `gh` fallback, use `--body-file` so markdown survives shell quoting:
 
 ```bash
-gh pr comment <NUMBER> --repo <OWNER/REPO> --body-file /tmp/dep-review-<NUMBER>.md
+gh pr comment <NUMBER> --repo <OWNER/REPO> --body-file "$BODY_FILE"
 ```
 
 Before posting, check for an existing review marker using the selected command set. For `gh` fallback:
 
 ```bash
-gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | rg 'dependabot-audit:v1'
+gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | grep -q 'dependabot-audit:v1'
 ```
 
-If a prior marker exists, ask whether to skip or repost. Default to skipping if the user does not specify.
+If a prior marker exists, ask whether to skip or repost. Default to skipping if the user does not specify. Delete each comment file after posting.
 
 Use this comment shape:
 
