@@ -251,7 +251,15 @@ Fetch PR metadata, CI status, changed files, and diff using the selected command
 
 Identify the **maintainer** to flag problems to: the owners that `CODEOWNERS` (in `.github/`, the repo root, or `docs/`) assigns to the changed manifests or lockfiles, otherwise the repository owner. Mention them by handle in the review; mention them in a PR comment only if the user approves posting it.
 
-Also read `.github/dependabot.yml`. Confirm a cooldown such as `cooldown: 7` exists for the relevant ecosystem. For routine updates, missing cooldown blocks auto-merge and should be flagged to the maintainer.
+Also read `.github/dependabot.yml`. Confirm the `updates` entry for the relevant ecosystem and directory has a `cooldown` block, for example:
+
+```yaml
+cooldown:
+  default-days: 7
+  semver-major-days: 30
+```
+
+`semver-major-days`, `semver-minor-days`, and `semver-patch-days` override `default-days` for that bump type; any of them counts as a cooldown for the bumps it covers. For routine updates, missing cooldown blocks auto-merge and should be flagged to the maintainer.
 
 Extract for each package:
 
