@@ -109,10 +109,24 @@ jq -Rs "{body: .}" /tmp/dep-review-<NUMBER>.md \
     --data-binary @-
 ```
 
-Merge a safe PR with a merge commit:
+Check which merge methods the base branch allows (see Merge Behavior):
 
 ```bash
-jq -n "{merge_method: \"merge\"}" \
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+| jq -r "[.allow_rebase_merge, .allow_squash_merge, .allow_merge_commit] | @tsv"
+
+curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/rules/branches/<BASE>" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+| jq -c "[.[] | select(.type == \"required_linear_history\" or .type == \"pull_request\") | {type, methods: .parameters.allowed_merge_methods}]"
+```
+
+Merge a safe PR, with `<METHOD>` chosen per Merge Behavior (`rebase`, `squash`, or `merge`):
+
+```bash
+jq -n "{merge_method: \"<METHOD>\"}" \
 | curl -fsS -X PUT "https://api.github.com/repos/<OWNER>/<REPO>/pulls/<NUMBER>/merge" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -156,8 +170,13 @@ gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' 
 # Post a review comment after explicit user approval
 gh pr comment <NUMBER> --repo <OWNER/REPO> --body-file /tmp/dep-review-<NUMBER>.md
 
-# Merge with a merge commit
-gh pr merge <NUMBER> --repo <OWNER/REPO> --merge
+# Check allowed merge methods
+gh repo view <OWNER/REPO> --json rebaseMergeAllowed,squashMergeAllowed,mergeCommitAllowed
+gh api repos/<OWNER/REPO>/rules/branches/<BASE> \
+  --jq '[.[] | select(.type == "required_linear_history" or .type == "pull_request") | {type, methods: .parameters.allowed_merge_methods}]'
+
+# Merge, with --rebase, --squash, or --merge chosen per Merge Behavior
+gh pr merge <NUMBER> --repo <OWNER/REPO> --rebase
 
 # Request Dependabot rebase
 gh pr comment <NUMBER> --repo <OWNER/REPO> --body "@dependabot rebase"
@@ -348,10 +367,16 @@ Do not add attribution or a generated-by signature. If commenting fails for one 
 
 ## Merge Behavior
 
-When merging a safe PR, use a merge commit rather than squash so the Dependabot commit remains visible for audit history. Use the selected command set. For `gh` fallback:
+Keep the base branch history linear. Before merging, check the allowed merge methods with the selected command set, then pick the first one allowed:
+
+1. **Rebase** (default): the Dependabot commit lands on the base branch as-is, still authored by `dependabot[bot]`, which keeps the audit trail without a merge commit.
+2. **Squash**: when rebase merging is disabled. The squashed commit still records the PR.
+3. **Merge commit**: only when it is the sole method the repo and its rulesets allow. Never use it when a `required_linear_history` rule is active, because GitHub will reject it.
+
+A method is allowed only if the repo setting permits it and every active `pull_request` rule's `allowed_merge_methods` includes it. The rules endpoint returns 403 for private repos on plans without rulesets; then rely on the repo settings alone, which still makes rebase the right default. For `gh` fallback:
 
 ```bash
-gh pr merge <NUMBER> --repo <OWNER/REPO> --merge
+gh pr merge <NUMBER> --repo <OWNER/REPO> --rebase
 ```
 
 After merging one Dependabot PR in a batch, remaining Dependabot PRs may need rebasing. Request it with the selected command set, then re-check CI before any further merge. For `gh` fallback:
