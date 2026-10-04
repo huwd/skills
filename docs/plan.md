@@ -234,17 +234,22 @@ this skill as the example.
       push.
 - [x] Create `huwd/skills` (public), push, then import the `protect_main` and
       `prevent_tag_deletion` rulesets.
-- [ ] Import the dependabot config from `huwd/standards`.
-- [ ] **Minimum CI** (required checks from day one):
-  - frontmatter/spec validation (agentskills `skills-ref validate`, or a
-    small script: name matches the directory, description length, allowed keys)
-  - `claude plugin validate` on the marketplace manifest
-  - markdownlint + prettier (Markdown/JSON/YAML)
-  - shellcheck on `scripts/**` **and** on fenced `bash` blocks extracted from
-    `SKILL.md` and `references/`
-  - secret scan (betterleaks or gitleaks, as agent-manager uses)
-  - discovery document schema validation (the GOV.UK script)
-  - actions pinned to SHAs (zizmor or an equivalent workflow linter)
+- [x] Import the dependabot config from `huwd/standards` (GitHub Actions
+      only; there are no package manifests).
+- [x] **Minimum CI**, in `.github/workflows/ci.yml`:
+  - [x] frontmatter/spec validation with `skills-ref` (`agentskills validate`)
+  - [x] markdownlint-cli2, with MD013 and MD060 off
+  - [x] shellcheck on `skills/*/scripts/*.sh` and on fenced shell blocks in
+        Markdown (`.github/scripts/check-shell-blocks.py`)
+  - [x] secret scan: gitleaks over the full history, as a checksum-verified
+        binary (gitleaks-action is no longer MIT and calls a licence service)
+  - [x] actions pinned to SHAs, audited by zizmor
+  - [ ] `claude plugin validate`, once the marketplace manifest exists
+  - [ ] discovery document schema validation, in phase 3
+  - [ ] prettier, if JSON or YAML beyond the workflows appears. It would
+        also reformat Markdown tables, so keep it off Markdown.
+- [x] Make the CI jobs required status checks in the "Protect main"
+      ruleset.
 
 ## Evals: first target
 
