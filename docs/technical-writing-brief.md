@@ -118,6 +118,37 @@ Look for these, in order, and read whatever exists:
 Note which checks run in CI. Those are hard gates. Local-only checks are
 advisory.
 
+#### Finding the style guide
+
+The recommended home for a repository's style guide is
+`docs/style-guide.md`. The skill should look for a guide wherever it lives,
+in this order, and stop at the first it finds:
+
+1. **An explicit pointer.** A link or path to a style guide in `CLAUDE.md`,
+   `AGENTS.md`, `.github/copilot-instructions.md` or `CONTRIBUTING.md`.
+   This wins over any conventional path, because it is what the maintainers
+   chose.
+2. **A conventional path:** `docs/style-guide.md`, then `STYLE.md`,
+   `STYLEGUIDE.md`, `docs/STYLE.md` and `.github/STYLE.md`.
+3. **A search** for other likely files, skipping dependency and build
+   directories:
+
+   ```bash
+   find . \( -path ./node_modules -o -path ./vendor -o -path ./.git \) -prune \
+     -o -type f \( -iname '*style*guide*.md' -o -iname 'style.md' \) -print
+   ```
+
+4. **A section** headed "Writing", "Style" or "Documentation" in
+   `CONTRIBUTING.md` or `README.md`.
+
+Read the whole guide before writing; it may override the fallback defaults
+in ways a skim misses (for example, Oxford `-ize` spellings).
+
+When there is no guide, use `references/style-defaults.md` and say so in
+the report. Suggest adding `docs/style-guide.md`, and linking it from
+`CLAUDE.md` or `AGENTS.md` so every agent finds it. Don't create either file
+unless the user asks.
+
 ### 2. Write
 
 - Follow the repository's style guide. Where it is silent, use
@@ -161,8 +192,10 @@ vale --output=line path/to/file.md
 
 ### 5. Report
 
-State which checks ran and their result, which were unavailable or skipped,
-any vocabulary additions, and any warnings deliberately left. Keep it short.
+State which style guide was followed (by path, or "none found, used the
+defaults"), which checks ran and their result, which were unavailable or
+skipped, any vocabulary additions, and any warnings deliberately left. Keep
+it short.
 
 ## Fallback style defaults (`references/style-defaults.md`)
 
@@ -264,6 +297,8 @@ mechanically, so start with these, each a small fixture repository:
 | Add genuine jargon, report it | Doc using a real tool name and a seeded misspelling | Tool name in `accept.txt` in the existing order; misspelling fixed, not added; report lists the addition |
 | British spelling by default | No style guide; doc containing `color`, `organize` | Output has `colour`, `organise` |
 | Repository first | Style guide that asks for `-ize` | Output follows the guide, not the default |
+| Follow the pointer | Guide at `handbook/writing.md`, linked from `AGENTS.md`; a decoy `STYLE.md` with conflicting rules | Output follows the linked guide; report names its path |
+| No guide | No guide anywhere | Report says defaults were used and suggests `docs/style-guide.md`; no new files |
 | Don't install things unasked | Lint config but no linters available | No new files or lockfile changes; report names the skipped checks |
 | Judge warnings, don't obey them | A clear sentence that trips a write-good rule | Sentence unchanged |
 
@@ -288,8 +323,9 @@ Settle these with the user before or while implementing:
    skill infer the variant from existing documents when there is no guide?
 3. **Vocabulary edits.** Should the skill add jargon to a vocabulary on its
    own (then report it), or always ask first?
-4. **Style guide template** (out of scope for v1). declarative_laptop#52 still needs
-   `docs/style-guide.md`. Should this skill ship an `assets/style-guide.md`
+4. **Style guide template** (out of scope for v1). The recommended path
+   is settled as `docs/style-guide.md`, and declarative_laptop#52 still
+   needs one there. Should this skill ship an `assets/style-guide.md`
    template, derived from GOV.UK plus a terminology section, that repositories
    copy and adapt?
 
