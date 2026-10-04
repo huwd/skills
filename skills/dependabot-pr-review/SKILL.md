@@ -54,7 +54,7 @@ If this returns a login, use the API command set in [references/github-api.md](r
 
 2. List open Dependabot PRs with "List open Dependabot PRs".
 
-If none are open, say `No open Dependabot PRs in <repo>.` and stop. Otherwise, before analyzing, tell the user in one line: `Found N open Dependabot PRs in <repo>. Analyzing each now…` If the number of open PRs is at or near `open-pull-requests-limit` in `.github/dependabot.yml`, call out queue saturation because it can block new updates, including security PRs.
+   If none are open, say `No open Dependabot PRs in <repo>.` and stop. Otherwise, before analyzing, tell the user in one line: `Found N open Dependabot PRs in <repo>. Analyzing each now…` If the number of open PRs is at or near `open-pull-requests-limit` in `.github/dependabot.yml`, call out queue saturation because it can block new updates, including security PRs.
 
 3. Analyze each PR with the single-PR workflow. Fetch independent PRs in parallel where the harness allows.
 
