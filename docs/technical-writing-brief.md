@@ -55,6 +55,40 @@ patching afterwards.
 6. **Small `SKILL.md`.** Aim for under about 250 lines, with detail in
    `references/`.
 
+## Generic and repository rules
+
+Two layers of Vale rules, and Vale merges them itself:
+
+- **Generic, shipped here.** `assets/vale/` holds a small set that applies
+  everywhere: a `Generic` vocabulary of common technical terms (`GitHub`,
+  `JSON`, `YAML`, `Nix`…) and the British English spelling rule. It is
+  installed as the user's global Vale config, `~/.config/vale/.vale.ini`,
+  by their machine configuration (for example, declarative_laptop), not by
+  the skill.
+- **Repository, local.** A repository's own `.vale.ini`, styles and
+  vocabulary. Run from the repository root (for example,
+  `~/.config/nixos-config`), Vale reads these and merges the global config
+  in. Vocabularies add together: a word on either list passes.
+
+Verified with Vale 3.17: global and repository `Vocab` lists are
+concatenated and both style paths are searched; `--no-global` drops the
+generic layer.
+
+Rules for the skill:
+
+- **Prefer the repository.** Run Vale from the repository root, without
+  `--config` or `--no-global`, so both layers apply.
+- **Add words to the repository's allowlist**, the vocabulary named in its
+  `.vale.ini`. Never edit the generic set from another repository; changes
+  to it are pull requests to this repository. If the same term keeps being
+  added across repositories, suggest promoting it to the generic set.
+- **Keep the generic set to vocabulary and spelling.** It merges into every
+  repository, so enabling styles such as write-good there would add noise
+  everywhere.
+- **No repository config:** the generic layer still applies. Say that only
+  the generic rules ran, and don't create a repository config unless the
+  user asks.
+
 ## Scope of the first version
 
 v1 uses what a repository already has: discover, write, check, fix, report.
@@ -73,6 +107,8 @@ The lessons below are recorded now so they aren't lost.
 skills/technical-writing/
   SKILL.md
   README.md                      # human-facing: purpose, provenance, changelog
+  assets/
+    vale/                        # generic layer: .vale.ini, Generic vocabulary, en_GB spelling
   references/
     discovery.md                 # how to find a repo's standard and tools
     style-defaults.md            # fallback house style (GOV.UK-derived, British)
@@ -168,7 +204,9 @@ tools directly. Keep repository-specific commands out of `SKILL.md`;
 declarative_laptop's `just docs-lint` and `just docs-prose` recipes belong in
 `references/linters.md` as a worked example.
 
-When there is config but no recipe:
+When there is config but no recipe, run from the repository root so Vale
+picks up the repository's rules and the generic layer (see "Generic and
+repository rules"):
 
 ```bash
 markdownlint-cli2 path/to/file.md
@@ -179,9 +217,12 @@ vale --output=line path/to/file.md
 
 - **markdownlint errors:** fix all of them. `markdownlint-cli2 --fix`
   handles many rules automatically. Review its diff.
-- **Spelling errors:** fix real misspellings. For genuine project terms
-  (tool names, jargon), add them to the vocabulary, keeping its existing
-  order and case conventions, and list the additions in your report.
+- **Spelling errors:** fix real misspellings. Add clear project terms
+  (tool, product and command names) to the repository's own vocabulary,
+  keeping its existing order and case conventions, and list the additions
+  in your report. Ask first when unsure whether a word is jargon or a typo,
+  or when a change would edit or remove an existing entry. Never add to the
+  generic set from another repository.
 - **Terminology errors** (`Vale.Terms`, "Use 'X' instead of 'x'"): fix
   them, unless the hit is a false positive such as a domain name, file
   extension or code. Vale skips inline code, so wrapping a real identifier
@@ -194,7 +235,8 @@ vale --output=line path/to/file.md
 
 State which style guide was followed (by path, or "none found, used the
 defaults"), which checks ran and their result, which were unavailable or
-skipped, any vocabulary additions, and any warnings deliberately left. Keep
+skipped, any vocabulary additions and the file they went in, and any
+warnings deliberately left. Keep
 it short.
 
 ## Fallback style defaults (`references/style-defaults.md`)
@@ -296,6 +338,8 @@ mechanically, so start with these, each a small fixture repository:
 | Never silence a problem through config | Same, with an error that is awkward to fix | Lint config unchanged; no `markdownlint-disable` or Vale ignore comments added |
 | Add genuine jargon, report it | Doc using a real tool name and a seeded misspelling | Tool name in `accept.txt` in the existing order; misspelling fixed, not added; report lists the addition |
 | British spelling by default | No style guide; doc containing `color`, `organize` | Output has `colour`, `organise` |
+| Local allowlist | Repository vocabulary plus generic layer; doc using a new project term | Term added to the repository's `accept.txt`; generic set unchanged |
+| Generic term | Doc using `GitHub`, which is only in the generic set | No vocabulary change in the repository |
 | Repository first | Style guide that asks for `-ize` | Output follows the guide, not the default |
 | Follow the pointer | Guide at `handbook/writing.md`, linked from `AGENTS.md`; a decoy `STYLE.md` with conflicting rules | Output follows the linked guide; report names its path |
 | No guide | No guide anywhere | Report says defaults were used and suggests `docs/style-guide.md`; no new files |
@@ -319,10 +363,12 @@ Settle these with the user before or while implementing:
    bootstrap linting into a repository that has none (proposing config,
    vocabulary and a recipe), or only use what exists? Suggested approach:
    use what exists by default, and offer setup only when the user asks.
-2. **Default spelling.** Should the -ise fallback be British, or should the
-   skill infer the variant from existing documents when there is no guide?
-3. **Vocabulary edits.** Should the skill add jargon to a vocabulary on its
-   own (then report it), or always ask first?
+2. ~~**Default spelling.**~~ Decided: British English with -ise when the
+   repository has no guide. A guide that says otherwise wins.
+3. ~~**Vocabulary edits.**~~ Decided: add clear project terms to the
+   repository's own vocabulary and report them; ask when unsure. The
+   generic set changes only through this repository (see "Generic and
+   repository rules").
 4. **Style guide template** (out of scope for v1). The recommended path
    is settled as `docs/style-guide.md`, and declarative_laptop#52 still
    needs one there. Should this skill ship an `assets/style-guide.md`
@@ -332,8 +378,10 @@ Settle these with the user before or while implementing:
 ## Tasks
 
 - [x] Branch from an up-to-date `main`
-- [ ] Resolve open questions 2 and 3 with the user
+- [x] Resolve open questions 2 and 3 with the user
 - [ ] Write `skills/technical-writing/SKILL.md` and the v1 `references/` files
+- [ ] Build the generic layer in `assets/vale/`, and document wiring it into
+      `~/.config/vale/` (declarative_laptop is the first user)
 - [ ] Write the evals above under `evals/technical-writing/` and get them
       running
 - [ ] Write `README.md` with purpose, GOV.UK/OGL attribution and changelog
