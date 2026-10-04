@@ -6,14 +6,17 @@ Move from hand-symlinked skills in the standards repo to a managed, CI-gated ski
 catalogue that installs into every harness I use (Claude Code, Codex,
 OpenCode) with one command, and that other people could consume.
 
-Starter set: **dependabot-pr-review**, **atomic-commits**, **general**.
+Starter set: **dependabot-pr-review**, **technical-writing**,
+**atomic-commits**, **general**.
 
 Order of work:
 
 1. Get one skill into a format we're happy with (dependabot-pr-review).
 2. Settle the repository structure and a minimum CI.
-3. Stand up a basic agent-manager setup and install end to end.
-4. Bring the other two skills across, then build out the full CI/CD pipeline.
+3. Build the first eval suite, against technical-writing (see
+   [Evals: first target](#evals-first-target)).
+4. Stand up a basic agent-manager setup and install end to end.
+5. Bring the remaining skills across, then build out the full CI/CD pipeline.
 
 ---
 
@@ -213,7 +216,8 @@ branches:
 - [ ] Write evals: 5–10 prompts that should trigger the skill and 5 that
       shouldn't, plus a fixture repo with a few Dependabot PRs (patch dev-dep,
       major runtime, failing CI, missing cooldown, advisory, a PR body with
-      an injected instruction) and expected verdicts.
+      an injected instruction) and expected verdicts. **Deferred:** see
+      [Evals: first target](#evals-first-target).
 - [ ] Update `docs/skill-format.md` with this skill as the worked example.
 
 **Done when:** the skill passes the phase-2 CI, the evals give the expected
@@ -226,10 +230,11 @@ this skill as the example.
 
 - [x] Create the local repo and move the skills across (fresh history; old
       history stays in `huwd/standards`). Standards points here.
-- [ ] Review `dependabot-pr-review` and settle attribution before the first
+- [x] Review `dependabot-pr-review` and settle attribution before the first
       push.
-- [ ] Create `huwd/skills` (public), push, then import the `protect_main` and
-      `prevent_tag_deletion` rulesets and dependabot config from `huwd/standards`.
+- [x] Create `huwd/skills` (public), push, then import the `protect_main` and
+      `prevent_tag_deletion` rulesets.
+- [ ] Import the dependabot config from `huwd/standards`.
 - [ ] **Minimum CI** (required checks from day one):
   - frontmatter/spec validation (agentskills `skills-ref validate`, or a
     small script: name matches the directory, description length, allowed keys)
@@ -240,6 +245,27 @@ this skill as the example.
   - secret scan (betterleaks or gitleaks, as agent-manager uses)
   - discovery document schema validation (the GOV.UK script)
   - actions pinned to SHAs (zizmor or an equivalent workflow linter)
+
+## Evals: first target
+
+Evals for `dependabot-pr-review` need heavy wrapping. The skill reaches
+GitHub through shell `curl` and `gh` calls, and `claude plugin eval --mocks`
+only mocks MCP servers, so there is no supported way to fake those
+responses. Moving the skill to an MCP server would make mocking easy but
+would give up its main design goal of working without one.
+
+The first eval suite is therefore built against **technical-writing**
+(brief: [`technical-writing-brief.md`](technical-writing-brief.md)). Its
+behaviour is local, and most of it can be graded mechanically: linter exit
+codes, unchanged lint config, vocabulary diffs, spelling in the output, and
+what the report says was skipped. It has a waiting consumer in
+[huwd/declarative_laptop](https://github.com/huwd/declarative_laptop). The
+cost is that the eval sandbox needs `markdownlint-cli2`, Vale, its styles
+and an en_GB dictionary available offline.
+
+`atomic-commits` is the fallback, since it needs only git. `dependabot-pr-review`
+evals come back later, using real, already-resolved PRs as read-only
+fixtures rather than mocks.
 
 ## Phase 3: basic agent-manager setup and trial
 
@@ -258,7 +284,12 @@ this skill as the example.
       GitHub URL. This replaces the manual symlink block in `CLAUDE.md`.
 - [ ] Remove the old manual symlinks once parity is confirmed.
 
-## Phase 4: atomic-commits and general
+## Phase 4: technical-writing, atomic-commits and general
+
+### technical-writing
+
+Built from [`technical-writing-brief.md`](technical-writing-brief.md), and
+carries the first eval suite. Pulled ahead of the rest of this phase.
 
 ### atomic-commits
 
