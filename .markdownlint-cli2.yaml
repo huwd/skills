@@ -1,0 +1,9 @@
+# Markdown lint config. Runs in CI; see .github/workflows/ci.yml.
+gitignore: true
+config:
+  # Line length and table column style churn without improving the docs.
+  MD013: false
+  MD060: false
+  # Allow repeated section names under different parents.
+  MD024:
+    siblings_only: true
