@@ -1,0 +1,23 @@
+# Adapted from huwd/standards github/dependabot.yml. This repo has no
+# package manifests, so only GitHub Actions are updated.
+#
+# Tools pinned inside ci.yml (skills-ref, gitleaks, zizmor) aren't seen by
+# Dependabot; bump those by hand.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      github-actions-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
