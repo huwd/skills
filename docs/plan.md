@@ -248,6 +248,10 @@ this skill as the example.
   - [ ] discovery document schema validation, in phase 3
   - [ ] prettier, if JSON or YAML beyond the workflows appears. It would
         also reformat Markdown tables, so keep it off Markdown.
+  - [x] skill-validator (links, token budgets, unreferenced files) and
+        SkillSpector (static security scan, reviewed baselines), shared
+        with pre-commit; see
+        [decision 0002](decisions/0002-static-checks-in-ci.md)
 - [x] Make the CI jobs required status checks in the "Protect main"
       ruleset.
 
