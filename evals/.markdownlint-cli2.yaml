@@ -1,0 +1,4 @@
+# Eval prompts are messages to the agent, not documents, so they don't
+# start with a heading. Adds to the repository's root config.
+config:
+  MD041: false

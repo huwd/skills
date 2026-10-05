@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: no-trigger
+description: Reading Markdown without writing it shouldn't invoke the skill or edit anything.
+tags: [technical-writing, trigger]
+context:
+  scaffold_script: scaffold.sh
