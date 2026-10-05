@@ -9,6 +9,7 @@ that read the [Agent Skills](https://agentskills.io/specification) format.
 | ----- | ------------ |
 | [`dependabot-pr-review`](skills/dependabot-pr-review) | Reviews one or all open Dependabot PRs and gives a merge / verify / investigate / hold verdict |
 | [`do-release`](skills/do-release) | Runs a package release workflow |
+| [`technical-writing`](skills/technical-writing) | Writes and edits Markdown to the repository's style guide, and checks it with the repository's linters |
 
 ## Installing
 
