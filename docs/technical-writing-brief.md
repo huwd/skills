@@ -59,12 +59,14 @@ patching afterwards.
 
 Two layers of Vale rules, and Vale merges them itself:
 
-- **Generic, shipped here.** `assets/vale/` holds a small set that applies
-  everywhere: a `Generic` vocabulary of common technical terms (`GitHub`,
-  `JSON`, `YAML`, `Nix`…) and the British English spelling rule. It is
-  installed as the user's global Vale config, `~/.config/vale/.vale.ini`,
-  by their machine configuration (for example, declarative_laptop), not by
-  the skill.
+- **Generic, shipped here.** `assets/vale/` holds two configs, installed
+  in the user's Vale config directory (`~/.config/vale/` on Linux) by their
+  machine configuration (for example, declarative_laptop), not by the
+  skill:
+  - `.vale.ini`, the global config: a `Generic` vocabulary of common
+    technical terms, and nothing else.
+  - `british.ini`: en_GB (`-ise`) spelling plus the vocabulary, run with
+    `vale --config` in repositories that have no Vale config.
 - **Repository, local.** A repository's own `.vale.ini`, styles and
   vocabulary. Run from the repository root (for example,
   `~/.config/nixos-config`), Vale reads these and merges the global config
@@ -74,6 +76,11 @@ Verified with Vale 3.17: global and repository `Vocab` lists are
 concatenated and both style paths are searched; `--no-global` drops the
 generic layer.
 
+Why the spelling rule isn't global: `BasedOnStyles` merges too, so a
+global en_GB rule would also run in American-English repositories. It also
+fails outright in repositories that set their own `StylesPath`, because
+Vale then looks for the dictionary only under the repository's path.
+
 Rules for the skill:
 
 - **Prefer the repository.** Run Vale from the repository root, without
@@ -82,10 +89,9 @@ Rules for the skill:
   `.vale.ini`. Never edit the generic set from another repository; changes
   to it are pull requests to this repository. If the same term keeps being
   added across repositories, suggest promoting it to the generic set.
-- **Keep the generic set to vocabulary and spelling.** It merges into every
-  repository, so enabling styles such as write-good there would add noise
-  everywhere.
-- **No repository config:** the generic layer still applies. Say that only
+- **Keep the global config to vocabulary only.** It merges into every
+  repository, so any rule there runs everywhere.
+- **No repository config:** run `british.ini` with `--config`. Say that only
   the generic rules ran, and don't create a repository config unless the
   user asks.
 
@@ -379,13 +385,13 @@ Settle these with the user before or while implementing:
 
 - [x] Branch from an up-to-date `main`
 - [x] Resolve open questions 2 and 3 with the user
-- [ ] Write `skills/technical-writing/SKILL.md` and the v1 `references/` files
-- [ ] Build the generic layer in `assets/vale/`, and document wiring it into
+- [x] Write `skills/technical-writing/SKILL.md` and the v1 `references/` files
+- [x] Build the generic layer in `assets/vale/`, and document wiring it into
       `~/.config/vale/` (declarative_laptop is the first user)
 - [ ] Write the evals above under `evals/technical-writing/` and get them
       running
-- [ ] Write `README.md` with purpose, GOV.UK/OGL attribution and changelog
-- [ ] Add the skill to the table in the root `README.md`
+- [x] Write `README.md` with purpose, GOV.UK/OGL attribution and changelog
+- [x] Add the skill to the table in the root `README.md`
 - [ ] Symlink it into the harness skill directories (see `skill-format.md`)
       and confirm it triggers when editing Markdown in declarative_laptop
 - [ ] Try it end to end in declarative_laptop: edit a doc, confirm
