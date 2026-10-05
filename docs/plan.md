@@ -304,8 +304,9 @@ carries the first eval suite. Pulled ahead of the rest of this phase.
       guide, generic term, no linters available
 - [ ] Install the generic layer through declarative_laptop and try the
       skill end to end there
-- [ ] Run the evals in CI (needs an API key secret, the linters on the
-      runner, and a cost ceiling)
+- [x] ~~Run the evals in CI~~ Decided against for now: evals run locally
+      on a subscription before merging, per
+      [decision 0001](decisions/0001-run-evals-locally.md)
 
 The repository is now a Claude Code plugin (`.claude-plugin/plugin.json`,
 named `huwd-skills`), which `claude plugin eval` needs. That also makes
