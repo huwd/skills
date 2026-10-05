@@ -1,0 +1,9 @@
+{
+  "name": "huwd-skills",
+  "description": "Reusable agent skills: Dependabot PR review, releases and technical writing.",
+  "author": {
+    "name": "Huw Diprose"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/huwd/skills"
+}
