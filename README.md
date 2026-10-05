@@ -22,7 +22,8 @@ directory into your harness's skills directory as described in
 
 Every pull request runs static checks, none of which call a model: skill
 validation, a static security scan, Markdown and shell linting, secret
-scanning and workflow audits. Run the same checks before each commit with
+scanning, workflow audits, and [bats](https://github.com/bats-core/bats-core)
+tests for the scripts in `.github/scripts/`. Run the same checks before each commit with
 [pre-commit](https://pre-commit.com/), which needs uv and Go:
 
 ```bash
