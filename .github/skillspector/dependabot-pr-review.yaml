@@ -1,0 +1,26 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Reviewed 2026-10-05 against SkillSpector 2.12.0 static mode (--no-llm).
+# Each entry says why the finding is accepted. Fingerprints are exact, so an
+# edit to the matching text or a scanner upgrade brings the finding back for
+# review: check it, then regenerate with `skillspector baseline` and restore
+# the reasons and rules below.
+version: 2
+scanner_version: 2.12.0
+rules:
+- id: E1
+  path: "*"
+  message: "*https://api.github.com/*"
+  reason: "Expected: the skill calls the GitHub REST API at api.github.com, the only host it contacts. Scoped to that exact host so any other URL is still reported."
+fingerprints:
+- hash: sha256:09cc2c8e53b8d0809a4fccfd75f7d0dd1f9567453c047e9f563f1ea5746c1c51
+  rule_id: AE1
+  file: SKILL.md
+  reason: "Scanner limit, not evasion: a static parser span limit stopped it fully inspecting references/github-cli.md (reason_code static_parse_limit). The file is plain gh commands."
+- hash: sha256:4af4c04a74ee228e5a5987f0e9044da7949a34f7918d3be2d131a7cf2aea3c6e
+  rule_id: AR2
+  file: SKILL.md
+  reason: "False positive: matches 'Do not judge CI from the check list alone', an instruction to check required CI more carefully, not to drop warnings."
+- hash: sha256:65bfd8324af5dfd8089a2e79d1d1d41a46c6d25460f365215112651899704ef5
+  rule_id: EA2
+  file: SKILL.md
+  reason: "False positive: matches 'Do not ask the user for a token and do not print, read, or persist secrets', a safety rule."
