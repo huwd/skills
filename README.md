@@ -18,12 +18,31 @@ is planned; see [`docs/plan.md`](docs/plan.md). Until then, symlink a skill
 directory into your harness's skills directory as described in
 [`docs/skill-format.md`](docs/skill-format.md).
 
+## Checks
+
+Every pull request runs static checks, none of which call a model: skill
+validation, a static security scan, Markdown and shell linting, secret
+scanning and workflow audits. Run the same checks before each commit with
+[pre-commit](https://pre-commit.com/), which needs uv and Go:
+
+```bash
+pre-commit install          # once
+pre-commit run --all-files  # every check, by hand
+```
+
+Skill behaviour is tested with evals, run locally before merging a change
+to a skill, for example `evals/technical-writing/run.sh`. See
+[decision 0001](docs/decisions/0001-run-evals-locally.md) and
+[decision 0002](docs/decisions/0002-static-checks-in-ci.md).
+
 ## Layout
 
 ```text
 skills/<skill-name>/SKILL.md   # one directory per skill
 docs/skill-format.md           # authoring conventions
 docs/plan.md                   # plan and progress
+docs/decisions/                # decision records
+evals/<skill-name>/            # eval suites, not installed with skills
 ```
 
 ## Licence
