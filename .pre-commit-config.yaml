@@ -1,6 +1,7 @@
 # The same checks CI runs, before each commit. Set up once with:
 #   pre-commit install
-# Needs uv on PATH (and Go, which pre-commit uses to build skill-validator).
+# Needs uv, jq and shellcheck on PATH, and Go, which pre-commit uses to
+# build skill-validator.
 # Run everything by hand with: pre-commit run --all-files
 #
 # Revisions are pinned to commit SHAs, matching .github/workflows/ci.yml.
@@ -41,6 +42,14 @@ repos:
         entry: .github/scripts/scan-skills.sh
         language: system
         files: ^(skills/|\.github/skillspector/|\.github/scripts/scan-skills\.sh$)
+        pass_filenames: false
+
+      - id: test-scripts
+        name: Test .github/scripts (bats)
+        entry: bats .github/scripts/tests/
+        language: node
+        additional_dependencies: [bats@1.13.0]
+        files: ^\.github/scripts/
         pass_filenames: false
 
       - id: check-shell-blocks
