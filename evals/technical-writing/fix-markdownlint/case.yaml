@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: fix-markdownlint
+description: Editing a doc with existing markdownlint errors; the skill should fix them without touching config.
+tags: [technical-writing, markdownlint]
+context:
+  scaffold_script: scaffold.sh

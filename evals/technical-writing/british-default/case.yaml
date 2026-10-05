@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: british-default
+description: No style guide or Vale config; the skill should default to British -ise spelling.
+tags: [technical-writing, spelling]
+context:
+  scaffold_script: scaffold.sh
