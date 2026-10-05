@@ -113,9 +113,10 @@ checks before each commit, using the same scripts and pinned versions.
 - A change that rewords flagged text, or a SkillSpector upgrade, needs the
   baseline reviewed and regenerated. That's deliberate: accepting a
   finding should be a decision, not a default.
-- Tools pinned in scripts and pre-commit (skills-ref, SkillSpector,
-  skill-validator, the pre-commit hooks) aren't updated by Dependabot and
-  need bumping by hand. `pre-commit autoupdate --freeze` covers the hooks.
+- Dependabot updates the GitHub Actions and the pre-commit hooks. Tools
+  pinned by version in `ci.yml` and `.github/scripts/` (skills-ref,
+  SkillSpector, skill-validator, gitleaks, zizmor) aren't visible to it
+  and need bumping by hand.
 - Static checks can't tell whether a skill works; evals under
   [0001](0001-run-evals-locally.md) do that.
 - Revisit if contributions from other people grow, when awesome-copilot's
