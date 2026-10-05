@@ -1,8 +1,11 @@
 # Adapted from huwd/standards github/dependabot.yml. This repo has no
-# package manifests, so only GitHub Actions are updated.
+# package manifests, so Dependabot updates GitHub Actions and pre-commit
+# hooks.
 #
-# Tools pinned inside ci.yml (skills-ref, gitleaks, zizmor) aren't seen by
-# Dependabot; bump those by hand.
+# Not seen by Dependabot, so bumped by hand: tools pinned by version in
+# ci.yml (gitleaks, skill-validator, zizmor) and in .github/scripts/
+# (skills-ref, SkillSpector). After bumping SkillSpector, re-review the
+# baselines in .github/skillspector/.
 
 version: 2
 updates:
@@ -21,3 +24,16 @@ updates:
         update-types:
           - "minor"
           - "patch"
+
+  - package-ecosystem: pre-commit
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      pre-commit-hooks:
+        patterns:
+          - "*"
