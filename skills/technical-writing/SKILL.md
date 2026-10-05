@@ -95,12 +95,20 @@ vale --config "<vale config dir>/british.ini" path/to/file.md
 ```
 
 `vale ls-dirs` shows the config directory. If the fallback isn't there,
-run plain `vale` and say in the report which rules were used.
+Vale has nothing British to check against, and with no config at all it
+refuses to run. Skip it, say so in the report, and check British spelling
+by eye.
 
 [references/linters.md](references/linters.md) explains the generic
 layer, reading each tool's output, and common false positives.
 
 ## 4. Fix and judge
+
+**Scope: every file you edited, all of it.** CI checks whole files, so an
+error that was already in a file you touched still fails the pull request.
+Fix lint errors anywhere in those files, including ones that were there
+before you started, and list those in the report. Leave files you didn't
+edit alone.
 
 - **markdownlint errors:** fix all of them. `markdownlint-cli2 --fix`
   handles many rules automatically; review its diff.
@@ -134,6 +142,7 @@ Checks:
 - markdownlint-cli2 (just docs-lint): pass
 - Vale (just docs-prose): pass, 3 warnings left as written
 Vocabulary: added Tailscale, tailnet to .vale/styles/config/vocabularies/House/accept.txt
+Existing errors fixed: bare URL on line 3 (MD034)
 Skipped: none
 ```
 
@@ -143,6 +152,8 @@ Skipped: none
   file unless asked.
 - **Checks:** each check, how it ran and its result.
 - **Vocabulary:** additions and the file they went in.
+- **Existing errors fixed:** errors that were in an edited file before you
+  started, so the user can see the change went beyond what they asked.
 - **Skipped:** checks that couldn't run and why, such as a tool that isn't
   installed.
 
@@ -159,6 +170,6 @@ Ask before:
 
 - Setting up linting in a repository that has none. Offer it, but only do
   it when the user asks.
-- Rewriting documents the task didn't touch. Mention problems seen in
-  passing; don't fix them unasked.
+- Changing files the task didn't touch. Mention problems seen in passing;
+  don't fix them unasked.
 - Enforcing style warnings as if they were errors.
