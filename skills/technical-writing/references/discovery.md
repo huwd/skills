@@ -12,7 +12,7 @@ Read whatever exists before writing.
 | Vale | `.vale.ini`, `.vale/`, `styles/`; vocabulary at `<StylesPath>/config/vocabularies/<Name>/accept.txt` |
 | markdownlint | `.markdownlint-cli2.jsonc`, `.markdownlint-cli2.yaml`, `.markdownlint.json`, `.markdownlint.yaml` |
 | Other prose tools | `cspell.json`, `.cspell.*`, `.textlintrc*`, `.alexrc` |
-| How checks run | `justfile`, `Makefile`, `package.json` scripts, `flake.nix` apps and packages, `.github/workflows/` |
+| How checks run | `justfile`, `Makefile`, `package.json` scripts, `flake.nix` apps and packages, scripts under `scripts/` or `bin/`, `.github/workflows/` |
 
 ## Finding the style guide
 

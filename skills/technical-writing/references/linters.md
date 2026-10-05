@@ -65,8 +65,9 @@ How to run it:
   recipe) with no `--config` and no `--no-global`. Both layers apply.
 - **No `.vale.ini`:** run
   `vale --config "<config dir>/british.ini" FILE.md`. If `british.ini`
-  isn't installed, plain `vale` uses Vale's built-in en_US spelling, so say
-  so in the report and check British spellings by eye.
+  isn't installed, skip Vale: with no config at all it stops with "no
+  config file found", and a vocabulary-only global config has no rules to
+  run. Say so in the report and check British spellings by eye.
 
 Don't pass `--no-global` in a repository with a Nix-wrapped Vale either:
 some wrappers rely on the global config path to find their styles.
