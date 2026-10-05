@@ -1,0 +1,17 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Reviewed 2026-10-05 against SkillSpector 2.12.0 static mode (--no-llm).
+# Each entry says why the finding is accepted. Fingerprints are exact, so an
+# edit to the matching text or a scanner upgrade brings the finding back for
+# review: check it, then regenerate with `skillspector baseline` and restore
+# the reasons and rules below.
+version: 2
+scanner_version: 2.12.0
+rules:
+- id: PE2
+  path: "assets/vale/styles/config/vocabularies/*/accept.txt"
+  reason: "Vocabulary lists are words Vale accepts as correctly spelt, such as 'sudo', not commands."
+fingerprints:
+- hash: sha256:e82d45c50c5e141abd7425bb5b87a62f4487e63770855f18cf8a669b050abd12
+  rule_id: RA2
+  file: references/linters.md
+  reason: "False positive: matches 'write only when it makes the text clearer' inside 'Rewrite only when…', advice on judging style warnings."
