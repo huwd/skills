@@ -57,13 +57,13 @@ jobs:
       - name: Show shellcheck version
         run: shellcheck --version
 
-      - name: Check skill scripts
+      - name: Check skill and eval scripts
         run: |
-          mapfile -t scripts < <(git ls-files 'skills/*/scripts/*.sh')
+          mapfile -t scripts < <(git ls-files 'skills/*/scripts/*.sh' 'evals/*.sh')
           if (( ${#scripts[@]} )); then
             shellcheck "${scripts[@]}"
           else
-            echo "No skill scripts to check."
+            echo "No scripts to check."
           fi
 
       - name: Check fenced shell blocks in Markdown
