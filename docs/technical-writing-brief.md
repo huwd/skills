@@ -388,8 +388,11 @@ Settle these with the user before or while implementing:
 - [x] Write `skills/technical-writing/SKILL.md` and the v1 `references/` files
 - [x] Build the generic layer in `assets/vale/`, and document wiring it into
       `~/.config/vale/` (declarative_laptop is the first user)
-- [ ] Write the evals above under `evals/technical-writing/` and get them
-      running
+- [x] Write the first evals under `evals/technical-writing/` and get them
+      running: `fix-markdownlint`, `british-default`, `vocab-local`,
+      `no-trigger`
+- [ ] Write the remaining cases: repository first, follow the pointer, no
+      guide, generic term, and no linters available
 - [x] Write `README.md` with purpose, GOV.UK/OGL attribution and changelog
 - [x] Add the skill to the table in the root `README.md`
 - [ ] Symlink it into the harness skill directories (see `skill-format.md`)
