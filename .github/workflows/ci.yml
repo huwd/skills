@@ -86,9 +86,11 @@ jobs:
       - name: Show shellcheck version
         run: shellcheck --version
 
-      - name: Check skill and eval scripts
+      - name: Check scripts and their tests
         run: |
-          mapfile -t scripts < <(git ls-files 'skills/*/scripts/*.sh' 'evals/*.sh')
+          mapfile -t scripts < <(git ls-files \
+            'skills/*/scripts/*.sh' 'evals/*.sh' \
+            '.github/scripts/*.sh' '.github/scripts/*.bats' '.github/scripts/*.bash')
           if (( ${#scripts[@]} )); then
             shellcheck "${scripts[@]}"
           else
@@ -99,6 +101,19 @@ jobs:
         run: |
           mapfile -t docs < <(git ls-files '*.md')
           .github/scripts/check-shell-blocks.py "${docs[@]}"
+
+  tests:
+    name: Test scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Fakes stand in for gh, uv and skill-validator, so the tests make no
+      # network calls. jq and shellcheck come with the runner image.
+      - name: Run the .github/scripts tests
+        run: npx --yes bats@1.13.0 .github/scripts/tests/
 
   secrets:
     name: Scan for secrets
