@@ -1,0 +1,6 @@
+# British English (-ise) spelling. Replaces Vale.Spelling, which is en_US.
+extends: spelling
+message: "'%s' isn't in the British English dictionary or the Generic vocabulary."
+level: error
+dictionaries:
+  - en_GB

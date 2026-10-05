@@ -296,6 +296,27 @@ fixtures rather than mocks.
 Built from [`technical-writing-brief.md`](technical-writing-brief.md), and
 carries the first eval suite. Pulled ahead of the rest of this phase.
 
+- [x] Skill, references and generic Vale layer in `skills/technical-writing/`
+- [x] First evals in `evals/technical-writing/` (4 of the brief's 9 cases),
+      run with `evals/technical-writing/run.sh`. First full run: 1.00 with
+      the skill on every case, against 0.33 to 0.67 without it
+- [ ] Remaining eval cases: repository guide wins, follow the pointer, no
+      guide, generic term, no linters available
+- [ ] Install the generic layer through declarative_laptop and try the
+      skill end to end there
+- [x] ~~Run the evals in CI~~ Decided against for now: evals run locally
+      on a subscription before merging, per
+      [decision 0001](decisions/0001-run-evals-locally.md)
+
+The repository is now a Claude Code plugin (`.claude-plugin/plugin.json`,
+named `huwd-skills`), which `claude plugin eval` needs. That also makes
+`claude plugin validate` usable in CI.
+
+**Eval sandbox on NixOS:** the agent's shell inside a run gets `PATH` reset
+to the system profile, so tools from `nix shell` aren't visible. Fixtures
+work around it by baking resolved binary paths into their own lint
+scripts at scaffold time.
+
 ### atomic-commits
 
 Merge our commit standards (Conventional Commits, 50/72, why-bodies, "no
@@ -351,8 +372,7 @@ OpenCode, and they load when relevant rather than on every session.
 3. **Red-commit conflict** in atomic-commits: (a), (b) or (c)?
 4. **`do-release`**: moved here with the others; bring it up to the new
    format in phase 4.
-5. **Evals location:** inside each skill directory (installed to users, but
-   noise) or in a parallel `evals/<skill>/` tree (clean install)? Lean:
-   parallel tree.
+5. ~~**Evals location:**~~ Decided: a parallel `evals/<skill>/` tree at the
+   plugin root, so evals aren't installed with the skill.
 6. ~~Public from day one?~~ Decided: yes. Attribution for thoughtbot-derived
    content is decided at the pre-push review.
