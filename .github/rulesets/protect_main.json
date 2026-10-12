@@ -70,6 +70,10 @@
           {
             "context": "Test scripts",
             "integration_id": 15368
+          },
+          {
+            "context": "Check versions",
+            "integration_id": 15368
           }
         ]
       }

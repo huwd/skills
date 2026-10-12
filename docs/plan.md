@@ -290,9 +290,11 @@ Done differently from the original plan: see
       Codex and OpenCode (per current third-party guides; confirm on a real
       Codex session).
 - [x] Reproducible bundles (`build-bundle.py`), a release workflow that
-      attaches them to GitHub Releases and publishes every version to GitHub
-      Pages, and `config/ai-skills.yml` for a one-command install.
-- [ ] Enable GitHub Pages (GitHub Actions source) and cut `v0.1.0`.
+      creates tags from root `VERSION` increases after CI, uses `CHANGELOG.md`
+      for release notes, attaches bundles to GitHub Releases and publishes
+      every version to GitHub Pages, and `config/ai-skills.yml` for a one-command install.
+- [ ] Enable GitHub Pages (GitHub Actions source); merging the initial
+      `VERSION` publishes `v0.1.0` after CI.
 - [ ] Install on this machine, confirm `/technical-writing` works, and
       remove the hand-made symlinks this replaces.
 - [ ] Report the two agent-manager bugs found: `/tree/<ref>` pins truncate

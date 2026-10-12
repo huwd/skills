@@ -16,8 +16,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   skills:
@@ -112,6 +112,12 @@ jobs:
 
       # Fakes stand in for gh, uv and skill-validator, so the tests make no
       # network calls. jq and shellcheck come with the runner image.
+      - name: Install version parser
+        run: python3 -m pip install PyYAML==6.0.3
+
+      - name: Test version and release scripts
+        run: python3 -m unittest discover -s .github/scripts/tests -p "test_*.py"
+
       - name: Run the .github/scripts tests
         run: npx --yes bats@1.13.0 .github/scripts/tests/
 
@@ -153,3 +159,30 @@ jobs:
           version: 1.30.1
           advanced-security: false
           annotations: true
+
+  versions:
+    name: Check versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install version parser
+        run: python3 -m pip install PyYAML==6.0.3
+
+      - name: Validate versions and changelog
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python3 .github/scripts/check-versions.py --base "$BASE_SHA"
+
+  release:
+    name: Release
+    needs: [skills, scan, markdown, shell, tests, secrets, workflows, versions]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    uses: $/.github/workflows/release.yml

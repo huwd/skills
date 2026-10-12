@@ -22,6 +22,8 @@ The directory name and the `name` frontmatter value in `SKILL.md` must match. Us
 ---
 name: example-skill
 description: Does a specific repeatable workflow. Use when the user asks for that workflow or mentions its inputs.
+metadata:
+  version: "0.1.0"
 ---
 ```
 
@@ -31,9 +33,21 @@ Keep shared skill frontmatter conservative for cross-harness compatibility:
 - `description`
 - `license`, if useful
 - `compatibility`, only when the skill has real environment requirements
-- `metadata`, only for stable non-runtime notes
+- `metadata`, including the required stable SemVer `version`
 
 Avoid tool-specific features in shared skills unless the skill is explicitly marked as tool-specific. Put detailed references in `references/` instead of making `SKILL.md` huge.
+
+## Versioning
+
+Increase `metadata.version` when changing any tracked file in the skill
+folder, including references, scripts and assets. Versions use stable
+`MAJOR.MINOR.PATCH` numbers without leading zeroes; prerelease and build
+suffixes are not supported yet. Existing versions cannot decrease.
+
+By convention, a skill bump also prompts a root `VERSION` bump and a
+matching `CHANGELOG.md` entry describing the affected skill versions.
+The root version controls publication of the combined bundle. This
+convention allows several skill updates to share one bundle release.
 
 ## Compatibility
 

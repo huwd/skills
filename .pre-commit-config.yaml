@@ -58,3 +58,19 @@ repos:
         language: python
         additional_dependencies: [shellcheck-py==0.11.0.1]
         types: [markdown]
+
+      - id: check-versions
+        name: Check versions and changelog
+        entry: python3 .github/scripts/check-versions.py
+        language: python
+        additional_dependencies: [PyYAML==6.0.3]
+        files: ^(skills/|VERSION$|CHANGELOG\.md$|\.github/scripts/check-versions\.py$)
+        pass_filenames: false
+
+      - id: test-versions
+        name: Test versions and publishing
+        entry: python3 -m unittest discover -s .github/scripts/tests -p test_*.py
+        language: python
+        additional_dependencies: [PyYAML==6.0.3]
+        files: ^\.github/scripts/
+        pass_filenames: false

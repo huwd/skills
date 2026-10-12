@@ -1,6 +1,8 @@
 ---
 name: do-release
 description: Run or prepare a package release. Use when the user asks to cut, prepare, tag, publish, or verify a release for a repo, including RubyGems, npm, Cargo, PyPI, or tag-driven GitHub Actions releases.
+metadata:
+  version: "0.1.0"
 ---
 
 # Do Release
