@@ -4,3 +4,6 @@ PLAN.md
 
 # Eval run output
 evals/results/
+
+# Python script/test caches
+__pycache__/

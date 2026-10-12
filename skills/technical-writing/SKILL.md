@@ -12,6 +12,8 @@ license: MIT
 compatibility: >-
   Uses markdownlint-cli2 and Vale when the repository or machine provides
   them. Works without either and reports which checks it skipped.
+metadata:
+  version: "0.1.0"
 ---
 
 # Technical Writing

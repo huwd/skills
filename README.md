@@ -19,7 +19,7 @@ Code and the shared `~/.agents/skills`, which Codex and OpenCode read. From a
 checkout of this repository:
 
 ```bash
-npx @ai-agent-manager/cli@1.23.1 https://huwdiprose.co.uk/skills \
+npx @ai-agent-manager/cli@1.23.1 https://huwd.github.io/skills/ \
   --config config/ai-skills.yml
 ```
 
@@ -33,9 +33,29 @@ To work on a skill, symlink its directory instead, as described in
 
 ## Releasing
 
-Tag a commit on `main` as `vX.Y.Z` and push the tag. The Release workflow
-builds the bundle, attaches it to a GitHub Release, and republishes the
-site with every released version.
+Each skill records its own stable SemVer in `metadata.version`. Changes to
+any files in a skill directory require an increased skill version.
+
+To release the combined bundle, increase the root [`VERSION`](VERSION) and
+add a matching `## [X.Y.Z]` entry to [`CHANGELOG.md`](CHANGELOG.md). Our
+convention is to prepare a bundle release whenever a skill version changes;
+several skill updates can share a release. Normally increment the bundle
+patch number; choose minor or major deliberately for larger changes.
+
+After the merged commit passes CI on `main`, the Release workflow creates
+`vX.Y.Z`, builds the bundle and checksum, attaches them to a GitHub Release,
+and republishes Pages. The matching changelog entry supplies the release
+notes. Unchanged bundle versions do not create releases. CI checks version
+format, decreases, changed skills and changelog entries; the convention
+linking skill bumps to bundle releases is not a blocking check.
+
+Retry an interrupted publication by rerunning that commit's CI workflow.
+Existing tags must identify the same commit and existing assets must match;
+published assets are never overwritten. Run Release manually to rebuild
+Pages from existing releases without creating a release.
+
+Before the first release, enable GitHub Pages with GitHub Actions as its
+source. No manual tag push is needed.
 
 ## Checks
 

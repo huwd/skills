@@ -1,7 +1,7 @@
 # Install every skill in this repository with agent-manager, for Claude Code
 # and the shared ~/.agents/skills, which Codex and OpenCode read:
 #
-#   npx @ai-agent-manager/cli@1.23.1 https://huwdiprose.co.uk/skills \
+#   npx @ai-agent-manager/cli@1.23.1 https://huwd.github.io/skills/ \
 #     --config config/ai-skills.yml
 #
 # Run the same command again to update to the latest release. Add

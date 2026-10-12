@@ -13,6 +13,8 @@ license: MIT (see LICENSE)
 compatibility: Requires git, and either curl and jq with GitHub API access or an authenticated gh CLI.
 metadata:
   source: Adapted from https://github.com/thoughtbot/dependabot-review-skill-thoughtbot (MIT, Jose Blanco and thoughtbot, inc.)
+metadata:
+  version: "0.1.0"
 ---
 
 # Dependabot PR Review

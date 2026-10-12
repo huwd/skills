@@ -1,31 +1,21 @@
-# Publish the skills as a versioned agent-manager bundle.
-#
-# Pushing a tag vX.Y.Z on a commit already on main:
-#   1. builds bundle.zip and its .sha256, and attaches them to a GitHub
-#      Release for the tag, which is the permanent record of that version
-#   2. rebuilds the GitHub Pages site from every release's bundle and
-#      deploys it, so agent-manager can install any published version
-#
-# Run it by hand (workflow_dispatch) to rebuild the site without releasing.
-# See docs/decisions/0004-install-from-versioned-bundles.md.
-
+# Called by CI after all checks pass on a main-branch commit.
+# Manual dispatch rebuilds Pages from existing releases only.
 name: Release
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_call:
   workflow_dispatch:
 
 permissions: {}
 
 concurrency:
-  group: release
+  group: release-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
   release:
     name: Release bundle
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -35,37 +25,20 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Check the tag
-        env:
-          TAG: ${{ github.ref_name }}
-        run: |
-          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release tags look like v1.2.3; got $TAG"
-            exit 1
-          fi
-          # Only release what main has already checked.
-          if ! git merge-base --is-ancestor HEAD origin/main; then
-            echo "::error::$TAG isn't on main; tag a commit that has merged"
-            exit 1
-          fi
+      - name: Install version parser
+        run: python3 -m pip install PyYAML==6.0.3
 
-      - name: Build the bundle
-        env:
-          TAG: ${{ github.ref_name }}
-        run: .github/scripts/build-bundle.py "${TAG#v}" dist
-
-      - name: Create the release
+      - name: Publish a bundle version increase
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          version="${TAG#v}"
-          gh release create "$TAG" --verify-tag --generate-notes \
-            --title "$TAG" \
-            "dist/$version/bundle.zip" "dist/$version/bundle.zip.sha256"
+          BASE_SHA: ${{ github.event.before }}
+        run: python3 .github/scripts/publish-release.py
 
   pages:
     name: Publish bundles
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
     needs: release
     if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest

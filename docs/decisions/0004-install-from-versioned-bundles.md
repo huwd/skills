@@ -42,17 +42,19 @@ Two agent-manager bugs shaped the choice; both are to be reported upstream:
   `feat/x` can't be pinned.
 - HTTP discovery documents are looked up at the root of the origin, ignoring
   the base URL's path. On GitHub Pages this repository is served under
-  `/skills`, so agent-manager looks for a discovery document on a different
-  site; none exists there, which is what makes the fallback apply.
+  `/skills/`, so agent-manager looks for a discovery document at
+  `https://huwd.github.io/` instead of under the project path. The origin
+  must remain free of a discovery document for the fallback to apply.
 
 ## Options considered
 
 ### Bundles on GitHub Pages, no discovery document (chosen)
 
 `build-bundle.py` zips the tracked skill files and a manifest, reproducibly,
-with a sha256 sidecar. Pushing a `vX.Y.Z` tag on a commit already on `main`
-attaches both to a GitHub Release. The Release workflow then rebuilds the
-Pages site from every release's assets: one directory per version and an
+with a sha256 sidecar. Increasing the root `VERSION` with a matching
+changelog entry creates a `vX.Y.Z` tag and attaches both to a GitHub Release
+after CI passes on `main`. The Release workflow then rebuilds the Pages
+site from every release's assets: one directory per version and an
 `index.json`. `config/ai-skills.yml` installs from it headless.
 
 Versioned, checksummed, and installed under the skills' own names. The cost
@@ -79,23 +81,27 @@ versions. This remains the way to work on a skill locally.
 
 ## Decision
 
-Releases are tags of the form `vX.Y.Z` on commits that are already on
-`main`. Each release's bundle and checksum are attached to its GitHub
-Release, which is the permanent record. GitHub Pages serves every released
-version at `https://huwdiprose.co.uk/skills`, rebuilt from the Releases,
+Releases are driven by increases to the root `VERSION` on commits that
+have passed CI on `main`. The workflow creates tags of the form `vX.Y.Z`
+and uses the matching `CHANGELOG.md` entry as release notes. Each release's
+bundle and checksum are attached to its GitHub Release, which is the
+permanent record. GitHub Pages serves every released
+version at `https://huwd.github.io/skills/`, rebuilt from the Releases,
 with no discovery document. Machines install with
-`npx @ai-agent-manager/cli@1.23.1 https://huwdiprose.co.uk/skills --config config/ai-skills.yml`.
+`npx @ai-agent-manager/cli@1.23.1 https://huwd.github.io/skills/ --config config/ai-skills.yml`.
 
 ## Consequences
 
-- One release versions every skill together. Per-skill versions would need
-  one bundle source each; revisit if skills start changing at different
-  speeds.
+- One release versions the combined bundle. Each skill also carries its
+  own `metadata.version`; changed skill files require an increase. By
+  convention, skill bumps prompt a bundle version bump and changelog entry.
+  Independent publication would need one bundle source per skill; revisit
+  if skills start changing at different speeds.
 - Before upgrading the pinned agent-manager, check that bare bundles still
   install under the skills' own names.
 - If agent-manager fixes its discovery lookup to honour the base path, this
   layout is unaffected: there's still no discovery document to find.
-- A discovery document published at the root of `huwdiprose.co.uk` would
+- A discovery document published at the root of `huwd.github.io` would
   change these install names. Keep that site free of one, or move the
   bundles to their own origin.
 - Releases need Pages enabled with GitHub Actions as its source, and the
