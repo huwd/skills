@@ -107,6 +107,11 @@ class VersionsTest(unittest.TestCase):
         Path("skills/beta/SKILL.md").write_text('---\nname: beta\nmetadata:\n  version: "0.1.0"\n---\n')
         versions.check(base)
 
+    def test_duplicate_metadata_is_rejected(self):
+        text = '---\nname: alpha\nmetadata:\n  source: Original author\nmetadata:\n  version: "0.1.0"\n---\n'
+        with self.assertRaisesRegex(ValueError, "Duplicate YAML key"):
+            versions.skill_version(text)
+
     def test_missing_skill_version_fails(self):
         Path("skills/alpha/SKILL.md").write_text("---\nname: alpha\n---\n")
         with self.assertRaisesRegex(ValueError, "SemVer"):
