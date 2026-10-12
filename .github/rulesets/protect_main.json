@@ -62,6 +62,14 @@
           {
             "context": "Audit workflows",
             "integration_id": 15368
+          },
+          {
+            "context": "Scan skills",
+            "integration_id": 15368
+          },
+          {
+            "context": "Test scripts",
+            "integration_id": 15368
           }
         ]
       }
