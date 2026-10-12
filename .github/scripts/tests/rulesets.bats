@@ -130,3 +130,26 @@ live() {
   [ "$status" -eq 2 ]
   [[ "$output" == *"Usage:"* ]]
 }
+
+@test "apply does nothing, and doesn't ask, when every ruleset is in step" {
+  ruleset "Protect main" "Lint" "Test" > .github/rulesets/protect_main.json
+  ruleset "Protect main" "Lint" "Test" | live 1 "Protect main"
+  run .github/scripts/rulesets.sh apply </dev/null
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Nothing to apply"* ]]
+  [[ "$output" != *"To apply to"* ]]
+  not_called '--method'
+}
+
+@test "apply only touches the rulesets that differ" {
+  ruleset "Protect main" "Lint" "Test" > .github/rulesets/protect_main.json
+  ruleset "Protect tags" "Lint" "Test" > .github/rulesets/protect_tags.json
+  ruleset "Protect main" "Lint" "Build" | live 1 "Protect main"
+  ruleset "Protect tags" "Lint" "Test" | live 2 "Protect tags"
+  run .github/scripts/rulesets.sh apply <<<"y"
+  # read -p only prints its prompt on a terminal, so check the list instead.
+  [[ "$output" == *"To apply to owner/repo:"*"protect_main.json"* ]]
+  [[ "$output" != *"  .github/rulesets/protect_tags.json"* ]]
+  called '^gh api --method PUT repos/owner/repo/rulesets/1 '
+  not_called 'rulesets/2 |protect_tags'
+}

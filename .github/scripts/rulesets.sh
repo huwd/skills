@@ -37,8 +37,13 @@ live_ids() {
   }
 }
 
+# Files that differ from GitHub or don't exist there yet, filled by check()
+# for apply() to act on.
+pending=()
+
 check() {
   local status=0 file name id live want listing
+  pending=()
   declare -A seen=()
   listing="$(live_ids)"
   while IFS=$'\t' read -r id name; do
@@ -51,6 +56,7 @@ check() {
     id="${seen[$name]:-}"
     if [[ -z "$id" ]]; then
       echo "::error file=$file::Ruleset \"$name\" is defined here but not on GitHub"
+      pending+=("$file")
       status=1
       continue
     fi
@@ -67,6 +73,7 @@ check() {
       echo "In step: $name"
     else
       echo "::error file=$file::Ruleset \"$name\" differs from GitHub (diff above)"
+      pending+=("$file")
       status=1
     fi
   done
@@ -86,13 +93,19 @@ apply() {
     [[ -n "$name" ]] && ids["$name"]="$id"
   done <<<"$listing"
 
-  echo "Current differences:"
   check || true
-  read -r -p "Apply every file in $dir to $repo? [y/N] " answer
+  if (( ${#pending[@]} == 0 )); then
+    echo "Nothing to apply: every file in $dir matches GitHub."
+    return 0
+  fi
+
+  echo
+  echo "To apply to $repo:"
+  printf '  %s\n' "${pending[@]}"
+  read -r -p "Apply these ${#pending[@]} ruleset(s)? [y/N] " answer
   [[ "$answer" == [yY] ]] || { echo "Nothing changed."; return 0; }
 
-  shopt -s nullglob
-  for file in "$dir"/*.json; do
+  for file in "${pending[@]}"; do
     name="$(jq -r .name "$file")"
     id="${ids[$name]:-}"
     if [[ -n "$id" ]]; then
