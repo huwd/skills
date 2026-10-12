@@ -1,0 +1,108 @@
+# Publish the skills as a versioned agent-manager bundle.
+#
+# Pushing a tag vX.Y.Z on a commit already on main:
+#   1. builds bundle.zip and its .sha256, and attaches them to a GitHub
+#      Release for the tag, which is the permanent record of that version
+#   2. rebuilds the GitHub Pages site from every release's bundle and
+#      deploys it, so agent-manager can install any published version
+#
+# Run it by hand (workflow_dispatch) to rebuild the site without releasing.
+# See docs/decisions/0004-install-from-versioned-bundles.md.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release bundle
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check the tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tags look like v1.2.3; got $TAG"
+            exit 1
+          fi
+          # Only release what main has already checked.
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::$TAG isn't on main; tag a commit that has merged"
+            exit 1
+          fi
+
+      - name: Build the bundle
+        env:
+          TAG: ${{ github.ref_name }}
+        run: .github/scripts/build-bundle.py "${TAG#v}" dist
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          gh release create "$TAG" --verify-tag --generate-notes \
+            --title "$TAG" \
+            "dist/$version/bundle.zip" "dist/$version/bundle.zip.sha256"
+
+  pages:
+    name: Publish bundles
+    needs: release
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download every release's bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mapfile -t tags < <(gh release list --exclude-drafts --exclude-pre-releases \
+            --limit 1000 --json tagName --jq '.[].tagName')
+          if (( ${#tags[@]} == 0 )); then
+            echo "::error::No releases to publish"
+            exit 1
+          fi
+          for tag in "${tags[@]}"; do
+            gh release download "$tag" --dir "site/${tag#v}" \
+              --pattern bundle.zip --pattern bundle.zip.sha256
+            (cd "site/${tag#v}" && sha256sum --check bundle.zip.sha256)
+          done
+
+      - name: Write the index
+        run: .github/scripts/build-site.py site
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
