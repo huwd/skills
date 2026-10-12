@@ -278,20 +278,25 @@ fixtures rather than mocks.
 
 ## Phase 3: basic agent-manager setup and trial
 
-- [ ] Add `.well-known/agents/discovery.json` listing `huwd/skills` as a
-      `git` source.
-- [ ] Serve locally (`npx serve` / GOV.UK `serve.sh`) and run the TUI against
-      `http://localhost:3000`.
-- [ ] Install system-scope for `claude-code` and the generic `agents` target.
-- [ ] **Verify:**
-  - How the namespaced link name (`github.com~huwd~skills~…`) shows up in
-    Claude Code. Is `/dependabot-pr-review` still the invocable name?
-  - Whether Codex reads `~/.agents/skills/`. If not, keep a one-line manual
-    symlink for Codex and raise it upstream with the maintainer.
-  - The update flow after a new commit merges to `main`.
-- [ ] Write `config/ai-skills.yml` and try a headless install from the raw
-      GitHub URL. This replaces the manual symlink block in `CLAUDE.md`.
-- [ ] Remove the old manual symlinks once parity is confirmed.
+Done differently from the original plan: see
+[decision 0004](decisions/0004-install-from-versioned-bundles.md).
+
+- [x] Trial every install route with agent-manager 1.23.1. Git sources and
+      discovery documents namespace install names
+      (`github.com~huwd~skills~technical-writing`), which Claude Code uses as
+      the skill name; only bare HTTP bundles install under the skills' own
+      names.
+- [x] Codex reads `~/.agents/skills/`, so the generic `agents` target covers
+      Codex and OpenCode (per current third-party guides; confirm on a real
+      Codex session).
+- [x] Reproducible bundles (`build-bundle.py`), a release workflow that
+      attaches them to GitHub Releases and publishes every version to GitHub
+      Pages, and `config/ai-skills.yml` for a one-command install.
+- [ ] Enable GitHub Pages (GitHub Actions source) and cut `v0.1.0`.
+- [ ] Install on this machine, confirm `/technical-writing` works, and
+      remove the hand-made symlinks this replaces.
+- [ ] Report the two agent-manager bugs found: `/tree/<ref>` pins truncate
+      refs containing `/`, and HTTP discovery ignores the base URL's path.
 
 ## Phase 4: technical-writing, atomic-commits and general
 

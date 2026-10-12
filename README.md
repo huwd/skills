@@ -13,10 +13,29 @@ that read the [Agent Skills](https://agentskills.io/specification) format.
 
 ## Installing
 
-Installation through [agent-manager](https://github.com/ai-agent-manager/agent-manager)
-is planned; see [`docs/plan.md`](docs/plan.md). Until then, symlink a skill
-directory into your harness's skills directory as described in
+Each release is published as a versioned bundle, installed with
+[agent-manager](https://github.com/ai-agent-manager/agent-manager) into Claude
+Code and the shared `~/.agents/skills`, which Codex and OpenCode read. From a
+checkout of this repository:
+
+```bash
+npx @ai-agent-manager/cli@1.23.1 https://huwdiprose.co.uk/skills \
+  --config config/ai-skills.yml
+```
+
+Run it again to update. [`config/ai-skills.yml`](config/ai-skills.yml) picks
+the skills and tools, and can pin a version. Skills install under their own
+names, such as `/technical-writing`. See
+[decision 0004](docs/decisions/0004-install-from-versioned-bundles.md).
+
+To work on a skill, symlink its directory instead, as described in
 [`docs/skill-format.md`](docs/skill-format.md).
+
+## Releasing
+
+Tag a commit on `main` as `vX.Y.Z` and push the tag. The Release workflow
+builds the bundle, attaches it to a GitHub Release, and republishes the
+site with every released version.
 
 ## Checks
 

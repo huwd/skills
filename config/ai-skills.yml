@@ -1,0 +1,16 @@
+# Install every skill in this repository with agent-manager, for Claude Code
+# and the shared ~/.agents/skills, which Codex and OpenCode read:
+#
+#   npx @ai-agent-manager/cli@1.23.1 https://huwdiprose.co.uk/skills \
+#     --config config/ai-skills.yml
+#
+# Run the same command again to update to the latest release. Add
+# `bundle-version: 1.2.3` to pin one. See
+# docs/decisions/0004-install-from-versioned-bundles.md for why the URL has
+# no discovery document and the agent-manager version is pinned.
+tools: [claude-code, agents]
+scope: system
+skills:
+  - dependabot-pr-review
+  - do-release
+  - technical-writing
