@@ -17,6 +17,19 @@ import yaml
 SEMVER = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", re.ASCII)
 
 
+class UniqueKeyLoader(yaml.SafeLoader):
+    """Reject duplicate mappings instead of silently losing metadata."""
+
+    def construct_mapping(self, node, deep=False):
+        seen = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in seen:
+                raise ValueError(f"Duplicate YAML key: {key!r}")
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+
 def version(value):
     if not isinstance(value, str) or not SEMVER.fullmatch(value):
         raise ValueError(f"Invalid stable SemVer: {value!r}")
@@ -37,7 +50,7 @@ def skill_version(text):
     frontmatter = re.match(r"\A---\r?\n(.*?)\r?\n---(?:\r?\n|$)", text, re.DOTALL)
     if not frontmatter:
         raise ValueError("Skill must have YAML frontmatter")
-    data = yaml.safe_load(frontmatter[1])
+    data = yaml.load(frontmatter[1], Loader=UniqueKeyLoader)
     if not isinstance(data, dict) or not isinstance(data.get("metadata", {}), dict):
         raise ValueError("Skill frontmatter and metadata must be mappings")
     return data.get("metadata", {}).get("version")
