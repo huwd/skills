@@ -6,6 +6,9 @@
   and type; keep session wording and stray instructions out of records;
   read new documents cold before finishing.
 
+- Add authoring-skills and reviewing-skills at 0.1.0: separate authoring
+  and read-only diagnosis, with local behavioural eval fixtures.
+
 ## [0.1.0]
 
 - Publish reproducible, checksummed skill bundles through GitHub Releases
