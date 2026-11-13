@@ -3,6 +3,28 @@
 Use the target project's existing runner or fresh local agent sessions.
 Do not add a new evaluation platform as a side effect of editing a skill.
 
+Every new skill needs behavioural and discovery evals. When
+changing behaviour, add a regression case for the change. This does not
+require repeating expensive runs for a spelling or link correction.
+
+## Use red, green, refactor for behavioural changes
+
+1. **Red:** run the previous version, or no skill for a new workflow, and
+   capture a shortcoming against a defined expected outcome. Write a case
+   that exposes it. If the baseline already succeeds, the case does not
+   establish a need for new instructions; choose a justified harder case
+   or reconsider the skill rather than manufacturing a failure.
+2. **Green:** make the smallest instruction or helper change that addresses
+   that shortcoming. Compare repeated runs and check preserved behaviour.
+3. **Refactor:** simplify the instructions or helpers while keeping the
+   expected outcomes stable, then rerun the affected cases.
+
+An eval is a measurement, not an ordinary deterministic unit test. Record
+variation across runs rather than treating a single pass as proof.
+Validate the measurement too: a known bad output should fail and a valid
+alternative should pass. A grader that only requires the skill to load
+cannot demonstrate that the skill improves the task.
+
 ## Choose a fair comparison
 
 | Change | Baseline | Candidate |
@@ -56,7 +78,3 @@ arm, checks, per-case results and any important limitations. Compare old
 and new results without inventing missing data. Report selection and task
 success separately. Keep private traces and credentials out of published
 fixtures and reports; sanitise examples before sharing them.
-
-In huwd/skills, suites live in `evals/<skill>/`, outside installed skills.
-Run them locally on the maintainer's subscription and include the score
-table in the pull request, following the repository's current decisions.

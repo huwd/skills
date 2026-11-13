@@ -1,10 +1,10 @@
 ---
 name: authoring-skills
 description: >-
-  Create or change reusable agent skills. Use when turning a demonstrated
-  workflow into a SKILL.md, fixing a skill's triggering or instructions,
-  or applying findings from a skill review. For assessment without edits,
-  use reviewing-skills when available.
+  Create a new agent skill or implement a requested change to an existing
+  one. Use when writing a SKILL.md from a repeatable workflow, making a
+  specified correction, or applying review findings. Use reviewing-skills
+  for assessment or diagnosis without edits.
 license: MIT (see LICENSE)
 metadata:
   version: "0.1.0"
@@ -16,7 +16,23 @@ metadata:
 Encode useful knowledge the agent would otherwise lack. A skill earns its
 place through better task outcomes, not the amount of guidance it contains.
 
-## Establish the change
+## Choose the task
+
+This skill produces files and checks them. `reviewing-skills` produces
+findings about whether and how those files should change.
+
+| Request | Starting point | Result |
+| ------- | -------------- | ------ |
+| Create a skill | A repeatable workflow and examples | A new skill and eval cases |
+| Make a specified change | A correction, requirement or review finding | An updated skill and relevant regression coverage |
+| Assess a skill or investigate a failure | The intended workflow and available evidence | A review; use reviewing-skills when available |
+
+A specific edit does not need a separate review first. If the request is
+to improve a skill but the problem is unclear, diagnose it before writing
+a fix. Review and implementation can be stages of the same authorised
+task; a request for review alone does not authorise implementation.
+
+## Understand what to write
 
 Read the target repository's instructions, skill conventions and relevant
 existing skills. Work in the source checkout; an installed or generated
@@ -28,10 +44,11 @@ has not been applied upstream.
   and the concrete expertise, correction or failure that motivates it.
   Reuse an existing skill if it already covers the job. A one-off command
   or ordinary model capability may need no skill at all.
-- **Existing skill:** identify the smallest change supported by the user's
-  request, a review finding or a recorded failure. Preserve unrelated
-  behaviour. If asked to diagnose rather than edit, give findings without
-  modifying files; `reviewing-skills`, if available, supports that work.
+- **Existing skill:** identify the requested difference in behaviour and
+  the smallest change that achieves it. Preserve unrelated behaviour.
+  A review finding should supply the evidence, expected outcome and
+  proposed regression scenario; ask for missing information only when it
+  prevents a meaningful change.
 
 Repository-wide conventions belong in repository instructions; ordinary
 explanation belongs in docs. Recommend the appropriate home when the
@@ -45,7 +62,8 @@ observe it. Use the supplied runbook, correction, trace or output as
 evidence; distinguish observations from your hypotheses. A missing tool
 does not establish that the skill's instructions are wrong.
 
-For a new workflow or a behavioural change, prepare a representative
+Every new skill needs eval cases for its intended workflow and discovery.
+A behavioural change needs regression coverage. Prepare a representative
 scenario, a nearby case that should keep working, and a request that
 should not trigger it. Keep expected outcomes independent of the proposed
 wording. Use the project's existing eval framework where available.

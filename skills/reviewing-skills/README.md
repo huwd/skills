@@ -9,6 +9,10 @@ Use `authoring-skills` when you want changes applied. The reviewer produces
 evidence and a regression scenario that a maintainer can act on without
 having that skill installed.
 
+The review compares the skill with its intended workflow, the repository's
+requirements and the bundled authoring criteria. It names those sources
+and identifies missing requirements rather than inventing them.
+
 ## Files
 
 - [SKILL.md](SKILL.md): review boundaries, diagnosis and findings.

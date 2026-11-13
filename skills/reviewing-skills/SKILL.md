@@ -17,7 +17,29 @@ Assess whether the skill helps the requested job, and whether changing it
 would address the observed problem. A cleaner-looking document is not
 evidence of better behaviour.
 
-## Bound the review
+This skill returns findings without changing the skill. `authoring-skills`
+creates skills and implements specified changes, including review findings.
+It does not need this review for every edit. When the user requests both
+assessment and improvements, they can be stages of the same task; a
+review-only request ends with the findings.
+
+## Set the review criteria
+
+Identify what the skill is meant to achieve before looking for defects:
+
+- **Intended workflow:** the user's requirements, a brief, a runbook or
+  another source that defines the inputs, expected outputs and constraints.
+- **Repository requirements:** its skill format, validation commands,
+  permissions and release policy.
+- **Authoring quality:** the scope, description, instructions and evidence
+  checks in [references/review-criteria.md](references/review-criteria.md).
+
+Name the sources used. Compare the instructions and any observed runs
+against those criteria. If intended behaviour is undocumented, say which
+questions remain open; do not turn your preferred design into a finding.
+General structure can still be reviewed without claiming domain correctness.
+
+## Choose the scope and evidence
 
 Establish the target skill or explicitly requested set, the user's concern
 and available evidence. Read local instructions and the skill's relevant
@@ -59,10 +81,9 @@ exit 127 and an accurate missing-tool report may show the skill working
 correctly. Repeating its existing prerequisite rule adds no value.
 Conversely, a successful final reply does not excuse an unauthorised action.
 
-## Review usefulness and the contract
+## Check the skill against those criteria
 
-Read [references/review-criteria.md](references/review-criteria.md) for
-the checks relevant to the request. Focus on consequences: wrong routing,
+Use the checks relevant to the request. Focus on consequences: wrong routing,
 missing knowledge, ambiguous decisions, unnecessary context, hidden
 dependencies, unsafe authority or evidence that the skill adds no benefit.
 Respect local conventions; do not impose a different catalogue's layout

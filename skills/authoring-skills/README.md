@@ -9,6 +9,10 @@ Use `reviewing-skills` for assessment without edits. The two skills install
 independently: an author can work from a supplied finding, and a reviewer
 can give a useful report without an authoring skill present.
 
+A known correction goes straight to authoring. An open-ended request to
+improve an existing skill starts with diagnosis, then authoring applies
+the agreed change within the same task. Review alone produces findings.
+
 ## Files
 
 - [SKILL.md](SKILL.md): the authoring and change workflow.
