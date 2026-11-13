@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: authoring-skills-repair
+description: Repair a demonstrated overbroad retry instruction without losing the existing workflow.
+tags: [authoring-skills]
+context:
+  scaffold_script: scaffold.sh
