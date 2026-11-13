@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: reviewing-skills-diagnose
+description: Distinguish a broken environment from a defective instruction using the trace.
+tags: [reviewing-skills]
+context:
+  scaffold_script: scaffold.sh
