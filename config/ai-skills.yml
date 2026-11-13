@@ -11,6 +11,8 @@
 tools: [claude-code, agents]
 scope: system
 skills:
+  - authoring-skills
+  - reviewing-skills
   - dependabot-pr-review
   - do-release
   - technical-writing
