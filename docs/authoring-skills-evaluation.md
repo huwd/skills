@@ -3,8 +3,10 @@
 This report is for maintainers reviewing
 [PR #27](https://github.com/huwd/skills/pull/27). It explains what the local
 evals measure and whether their results justify accepting the two skills.
-The current evidence supports basic behaviour checks, but does not demonstrate
-that the skills improve results over an agent working without them.
+The cases support basic behaviour checks. A corrected review check caught one
+forbidden command attempt in the baseline and none with the skill in three
+runs per arm. That small comparison does not establish a general benefit
+from the two skills.
 
 ## What was tested
 
@@ -22,7 +24,7 @@ authoring case to establish whether that new skill behaves correctly.
 
 ## Recorded comparison
 
-The original draft at `508689f` was evaluated on 13 November 2026 with Claude
+The revised skills at `9829396` were evaluated on 13 November 2026 with Claude
 Code 2.1.318 and model `claude-opus-5-5`, using the local subscription. Each
 case ran three times with the plugin and three times without: 36 sessions.
 Positive selection indicators were reported separately from task scores.
@@ -45,10 +47,10 @@ authoring instructions themselves.
 
 The comparison removed the whole plugin in the baseline arm. Trace inspection
 found only the intended skill invoked in positive cases. It also found no
-remote build checks, exports or pushes, and no writes by the reviewer.
-After the distribution wording changed, one repair and one review comparison
-were repeated in both arms: four further sessions, with all scores 1.00.
-These smaller runs are smoke checks, not a new success-rate estimate.
+remote status checks, exports or pushes, and no writes by the reviewer.
+The command guard in this full comparison was subsequently corrected as
+described below; this table records its original scoring rather than
+silently applying a different measurement.
 
 ## Why passing is insufficient
 
@@ -59,12 +61,28 @@ recognise references to triggering and pushes, rather than judging whether
 the proposed remedies are correct. Command-prefix guards miss indirect
 execution, and Edit/Write counts miss possible shell writes.
 
-The first comparison also exposed two grader mistakes. A command guard
+One baseline review issued `buildctl --help` after command lookup despite
+the prompt forbidding `buildctl` calls. The old guard only checked direct
+status calls, so its automated score remained 1.00. This observed scope
+violation shows why the table is not a task-success rate. The guard was
+corrected to cover help and simple command chains, then checked against
+eight permitted and forbidden command examples with JavaScript matching.
+
+The corrected case at `1c29519` was then run three times per arm with the
+same runner and model. All with-skill task scores were 1.00; baseline scores
+were 0.83, 1.00 and 1.00 (mean 0.94). The failed baseline attempted
+`buildctl --help` after a command lookup; the tool was unavailable. No
+with-skill run attempted that command. This is an observed difference on
+one narrow scope check, not a demonstrated improvement in authoring quality.
+No skill instructions changed between these comparisons.
+
+An earlier comparison also exposed two grader mistakes. A command guard
 matched a command written inside a test description, and a wording check
 missed a valid finding expressed differently. Both were corrected and both
 arms rerun. Their apparent improvement or regression was measurement error.
 
-The cases have no held-out real-task set or automated bad-output controls.
+The cases have no held-out real-task set or maintained controls for the other
+graders.
 Local shell startup errors add noise to command-reliability measurements.
 The scores therefore support a limited smoke-test claim. They establish
 neither added value nor a security guarantee.

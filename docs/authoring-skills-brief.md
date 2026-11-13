@@ -62,8 +62,8 @@ bad outputs should fail, and valid alternatives should pass. A baseline that
 already succeeds does not establish a benefit from new instructions.
 
 The [evaluation report](authoring-skills-evaluation.md) describes the evidence
-for this pair. Its small synthetic cases are useful smoke tests and have
-not demonstrated added value over the baseline.
+for this pair. Its small synthetic cases provide limited evidence: the report
+distinguishes one observed review difference from unproven authoring benefits.
 
 ## Reuse the existing catalogue and tools
 

@@ -387,8 +387,8 @@ trade-offs and the user's decision to split the responsibilities.
 - [x] Add local fixtures for creation, repair, declining a skill, review,
       environment diagnosis and a negative trigger.
 - [x] Record the final local comparison and limitations in the
-      [evaluation report](authoring-skills-evaluation.md): task checks pass
-      in both arms, with no measured uplift on these fixtures.
+      [evaluation report](authoring-skills-evaluation.md): a corrected guard
+      catches one baseline command attempt; broader benefit remains unproven.
 - [ ] Try the pair on further real catalogue work, including commit messages.
 
 ## Open questions
