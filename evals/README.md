@@ -51,9 +51,13 @@ as authored tests, including whether they reject plausible incorrect results.
 | [Review: diagnose](reviewing-skills/diagnose) | Recognise a missing prerequisite rather than invent a skill defect | Checks the diagnosis, a no-change conclusion and no Edit/Write calls. |
 | [Review: reading only](reviewing-skills/no-trigger) | Explain a skill without initiating authoring or review | Checks the described command, no selection of either skill and no Edit/Write calls. |
 
-Command guards match direct command prefixes. Edit/Write counts cannot catch
-every shell write. Inspect traces and artefacts alongside scores; a passing
-word pattern alone is insufficient evidence of correct behaviour.
+The review command guard covers direct and simple chained `buildctl` calls,
+including help, and pushes. It allows `command -v buildctl`, which only looks
+up the command. The authoring guards cover direct export/status commands.
+These are pattern checks, not shell parsers; wrappers and indirect execution
+can escape them. Edit/Write counts cannot catch every shell write. Inspect
+traces and artefacts alongside scores; a passing word pattern alone is
+insufficient evidence of correct behaviour.
 
 ## Run and interpret the suites
 
