@@ -38,18 +38,19 @@ To work on a skill, symlink its directory instead, as described in
 Each skill records its own stable SemVer in `metadata.version`. Changes to
 any files in a skill directory require an increased skill version.
 
-To release the combined bundle, increase the root [`VERSION`](VERSION) and
-add a matching `## [X.Y.Z]` entry to [`CHANGELOG.md`](CHANGELOG.md). Our
-convention is to prepare a bundle release whenever a skill version changes;
-several skill updates can share a release. Normally increment the bundle
-patch number; choose minor or major deliberately for larger changes.
+Record skill changes under `## [Unreleased]` in
+[`CHANGELOG.md`](CHANGELOG.md). Release preparation is a separate step:
+increase the root [`VERSION`](VERSION) and move the selected entries into
+a matching `## [X.Y.Z]` section. Several skill updates can share a release.
+Normally increment the bundle patch number; choose minor or major
+deliberately for larger changes.
 
 After the merged commit passes CI on `main`, the Release workflow creates
 `vX.Y.Z`, builds the bundle and checksum, attaches them to a GitHub Release,
 and republishes Pages. The matching changelog entry supplies the release
 notes. Unchanged bundle versions do not create releases. CI checks version
-format, decreases, changed skills and changelog entries; the convention
-linking skill bumps to bundle releases is not a blocking check.
+format, decreases, changed skills and changelog entries. It does not
+require a skill change and bundle release to share a pull request.
 
 Retry an interrupted publication by rerunning that commit's CI workflow.
 Existing tags must identify the same commit and existing assets must match;

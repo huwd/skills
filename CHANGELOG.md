@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.1]
+## [Unreleased]
 
 - Add authoring-skills and reviewing-skills at 0.1.0: separate authoring
   and read-only diagnosis, with local behavioural eval fixtures.

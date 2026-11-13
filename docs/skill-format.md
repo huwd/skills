@@ -43,10 +43,11 @@ folder, including references, scripts and assets. Versions use stable
 `MAJOR.MINOR.PATCH` numbers without leading zeroes; prerelease and build
 suffixes are not supported yet. Existing versions cannot decrease.
 
-By convention, a skill bump also prompts a root `VERSION` bump and a
-matching `CHANGELOG.md` entry describing the affected skill versions.
-The root version controls publication of the combined bundle. This
-convention allows several skill updates to share one bundle release.
+Record changes and affected skill versions under `[Unreleased]` in
+`CHANGELOG.md`. Prepare the root `VERSION` bump and matching numbered
+changelog section in a separate release step. The root version controls
+publication of the combined bundle; several skill updates can share one
+release.
 
 ## Compatibility
 
