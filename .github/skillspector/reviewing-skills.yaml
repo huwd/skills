@@ -1,0 +1,13 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Reviewed 2026-11-13 against SkillSpector 2.12.0 static mode (--no-llm).
+# The previously reviewed sentence moved when the review criteria were added.
+version: 2
+scanner_version: 2.12.0
+rules: []
+fingerprints:
+- hash: sha256:ef5be4de3645de85dddb5105e1eeade032b30645e61571a2f05bcae3efcef36e
+  rule_id: MP1
+  file: SKILL.md
+  reason: 'False positive: this sentence warns against turning every correction into
+    a permanent instruction. Review explicitly forbids writing memory or persisting
+    input. The same reviewed sentence moved when the review criteria were added.'

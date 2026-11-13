@@ -7,6 +7,8 @@ that read the [Agent Skills](https://agentskills.io/specification) format.
 
 | Skill | What it does |
 | ----- | ------------ |
+| [`authoring-skills`](skills/authoring-skills) | Creates or changes skills from concrete workflows and observed failures, then verifies the change |
+| [`reviewing-skills`](skills/reviewing-skills) | Reviews skills without edits and traces failures to the appropriate remedy |
 | [`dependabot-pr-review`](skills/dependabot-pr-review) | Reviews one or all open Dependabot PRs and gives a merge / verify / investigate / hold verdict |
 | [`do-release`](skills/do-release) | Runs a package release workflow |
 | [`technical-writing`](skills/technical-writing) | Writes and edits Markdown to the repository's style guide, and checks it with the repository's linters |
@@ -36,18 +38,19 @@ To work on a skill, symlink its directory instead, as described in
 Each skill records its own stable SemVer in `metadata.version`. Changes to
 any files in a skill directory require an increased skill version.
 
-To release the combined bundle, increase the root [`VERSION`](VERSION) and
-add a matching `## [X.Y.Z]` entry to [`CHANGELOG.md`](CHANGELOG.md). Our
-convention is to prepare a bundle release whenever a skill version changes;
-several skill updates can share a release. Normally increment the bundle
-patch number; choose minor or major deliberately for larger changes.
+Record skill changes under `## [Unreleased]` in
+[`CHANGELOG.md`](CHANGELOG.md). Release preparation is a separate step:
+increase the root [`VERSION`](VERSION) and move the selected entries into
+a matching `## [X.Y.Z]` section. Several skill updates can share a release.
+Normally increment the bundle patch number; choose minor or major
+deliberately for larger changes.
 
 After the merged commit passes CI on `main`, the Release workflow creates
 `vX.Y.Z`, builds the bundle and checksum, attaches them to a GitHub Release,
 and republishes Pages. The matching changelog entry supplies the release
 notes. Unchanged bundle versions do not create releases. CI checks version
-format, decreases, changed skills and changelog entries; the convention
-linking skill bumps to bundle releases is not a blocking check.
+format, decreases, changed skills and changelog entries. It does not
+require a skill change and bundle release to share a pull request.
 
 Retry an interrupted publication by rerunning that commit's CI workflow.
 Existing tags must identify the same commit and existing assets must match;
@@ -89,5 +92,7 @@ evals/<skill-name>/            # eval suites, not installed with skills
 
 [MIT](LICENSE). `dependabot-pr-review` is adapted from
 [thoughtbot/dependabot-review-skill-thoughtbot](https://github.com/thoughtbot/dependabot-review-skill-thoughtbot)
-and carries its copyright notice in [its own `LICENSE`](skills/dependabot-pr-review/LICENSE),
-so the notice travels with the skill when it is installed on its own.
+and carries its copyright notice in [its own `LICENSE`](skills/dependabot-pr-review/LICENSE).
+The authoring and review skills draw on GitLab B.V.'s MIT-licensed
+authoring skill and retain its notice in their own licence files. These
+notices travel with each skill when installed on its own.
