@@ -7,6 +7,8 @@ that read the [Agent Skills](https://agentskills.io/specification) format.
 
 | Skill | What it does |
 | ----- | ------------ |
+| [`authoring-skills`](skills/authoring-skills) | Creates or changes skills from concrete workflows and observed failures, then verifies the change |
+| [`reviewing-skills`](skills/reviewing-skills) | Reviews skills without edits and traces failures to the appropriate remedy |
 | [`dependabot-pr-review`](skills/dependabot-pr-review) | Reviews one or all open Dependabot PRs and gives a merge / verify / investigate / hold verdict |
 | [`do-release`](skills/do-release) | Runs a package release workflow |
 | [`technical-writing`](skills/technical-writing) | Writes and edits Markdown to the repository's style guide, and checks it with the repository's linters |
@@ -89,5 +91,7 @@ evals/<skill-name>/            # eval suites, not installed with skills
 
 [MIT](LICENSE). `dependabot-pr-review` is adapted from
 [thoughtbot/dependabot-review-skill-thoughtbot](https://github.com/thoughtbot/dependabot-review-skill-thoughtbot)
-and carries its copyright notice in [its own `LICENSE`](skills/dependabot-pr-review/LICENSE),
-so the notice travels with the skill when it is installed on its own.
+and carries its copyright notice in [its own `LICENSE`](skills/dependabot-pr-review/LICENSE).
+The authoring and review skills draw on GitLab B.V.'s MIT-licensed
+authoring skill and retain its notice in their own licence files. These
+notices travel with each skill when installed on its own.

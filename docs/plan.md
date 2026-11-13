@@ -374,6 +374,23 @@ OpenCode, and they load when relevant rather than on every session.
 
 ---
 
+## Skill authoring and review
+
+Issue [#24](https://github.com/huwd/skills/issues/24) adds separate skills
+for authoring and read-only review, ahead of further catalogue expansion.
+The [research brief](authoring-skills-brief.md) records the sources,
+trade-offs and the user's decision to split the responsibilities.
+
+- [x] Research GitLab's authoring and ADR workflows, AGENTS.md, Agent Skills,
+      Claude, OpenAI and an existing introspective skill.
+- [x] Add authoring-skills and reviewing-skills, each independently installable.
+- [x] Add local fixtures for creation, repair, declining a skill, review,
+      environment diagnosis and a negative trigger.
+- [x] Record the final local comparison and limitations in the
+      [evaluation report](authoring-skills-evaluation.md): task checks pass
+      in both arms, with no measured uplift on these fixtures.
+- [ ] Try the pair on further real catalogue work, including commit messages.
+
 ## Open questions
 
 1. ~~New `huwd/skills` repo or keep skills in `standards`?~~ Decided: new
