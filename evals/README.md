@@ -19,8 +19,8 @@ failure; the HTML report alone does not contain the agent's transcript.
 
 ## Codex
 
-`run-codex.py` compares committed versions of the technical-writing skill
-using the same fixture and prompt. It needs Python 3.12 or later, PyYAML,
+`run-codex.py` compares committed skill versions using the same fixture
+and prompt. It needs Python 3.12 or later, PyYAML,
 Git, the Codex CLI with a saved login, and the fixture's tools on `PATH`.
 For `vocab-local`, those tools are Vale and an en_GB Hunspell dictionary.
 The scaffold resolves the dictionary through Nix when available.
@@ -45,11 +45,17 @@ an unused results directory. Otherwise, output goes under the ignored
 `evals/results/` directory. Ref names resolve to commit IDs before any
 model runs start. Uncommitted skill edits are not tested.
 
+The default suite and skill are `technical-writing`. Use `--suite NAME` for
+another suite and `--skill NAME` when its skill has a different name.
+`--ref none` adds a no-skill arm for evaluating a new skill. Positive
+skill-read diagnostics are omitted in that arm; negative selection checks
+still apply. The runner keeps a copy of itself and the suite with the results.
+
 The runner:
 
 - alternates the two refs, reversing their order for each pair
 - creates a fresh fixture repository for every run
-- installs the selected skill at `.agents/skills/technical-writing/`
+- installs the selected skill at `.agents/skills/<skill-name>/`
 - disables installed user and admin skills and bundled system skills
 - uses a temporary Codex configuration with no user instructions, plugins
   or execution rules copied from the caller
@@ -86,6 +92,16 @@ The adapter supports regex graders and the following tool graders:
 | ------------- | -------------- | --------- |
 | `Bash` | A completed command whose command text matches `input_match` | Included in the score |
 | `Skill` | A successful command reading the tested `SKILL.md`, with its content in the output | Diagnostic; excluded from the score |
+
+A Codex-only `script` grader runs a trusted Python assessor after the model
+session. Its frontmatter names a `script` relative to the grader file and a
+`check`. The assessor receives the workspace path and check as arguments,
+and the event list as JSON on standard input. It returns a JSON object with
+a boolean `passed` field and an optional `detail`. A failed assertion returns
+`passed: false`; a crash or invalid verdict stops the batch as a runtime
+error. Like scaffolds, these assessors execute as the caller, so inspect
+them before running an unfamiliar suite. They can check actual git state
+without trusting the model's description of what it did.
 
 The skill-read diagnostic can miss a read split across several commands.
 Inspect the transcript when it fails. Unsupported grader types are
