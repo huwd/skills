@@ -72,6 +72,50 @@ class GradingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.grade({"type": "llm"})
 
+    def test_other_skill_uses_its_own_content(self):
+        path = self.workspace / ".agents/skills/commit-messages/SKILL.md"
+        path.parent.mkdir(parents=True)
+        path.write_text("---\nname: commit-messages\ndescription: Draft messages\n---\n\n# Commit messages\n\nRead the staged diff.\n")
+        events = [{"type": "item.completed", "item": {
+            "type": "command_execution", "command": f"cat {path}",
+            "aggregated_output": path.read_text(), "exit_code": 0}}]
+        result = runner.grade({"type": "tool_used", "tool": "Skill"}, self.workspace,
+                              events, skill_name="commit-messages")
+        self.assertTrue(result["passed"])
+
+    def test_absent_skill_can_satisfy_negative_selection(self):
+        result = runner.grade({"type": "tool_used", "tool": "Skill", "min": 0, "max": 0},
+                              self.workspace, [], skill_name="commit-messages")
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["count"], 0)
+
+    def script_grade(self, source):
+        path = self.workspace / "assess.py"
+        path.write_text(source)
+        return runner.grade({"type": "script", "script": "assess.py", "check": "example"},
+                            self.workspace, [], grader_dir=self.workspace)
+
+    def test_assessor_can_reject_a_result(self):
+        result = self.script_grade('print(\'{"passed": false, "detail": "index changed"}\')\n')
+        self.assertFalse(result["passed"])
+
+    def test_assessor_receives_workspace_and_completed_trace(self):
+        result = self.script_grade(
+            'import json, pathlib, sys\n'
+            'assert sys.argv[2] == "example"\n'
+            'assert pathlib.Path(sys.argv[1]).is_dir()\n'
+            'assert json.load(sys.stdin) == []\n'
+            'print(\'{"passed": true}\')\n')
+        self.assertTrue(result["passed"])
+
+    def test_assessor_crash_stops_the_batch(self):
+        with self.assertRaisesRegex(RuntimeError, "assessor"):
+            self.script_grade('raise SystemExit(3)\n')
+
+    def test_assessor_must_return_a_boolean_verdict(self):
+        with self.assertRaisesRegex(RuntimeError, "assessor"):
+            self.script_grade('print(\'{"passed": "yes"}\')\n')
+
 
 if __name__ == "__main__":
     unittest.main()
