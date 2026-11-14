@@ -9,11 +9,16 @@ that read the [Agent Skills](https://agentskills.io/specification) format.
 | ----- | ------------ |
 | [`authoring-skills`](skills/authoring-skills) | Creates or changes skills from concrete workflows and observed failures, then verifies the change |
 | [`reviewing-skills`](skills/reviewing-skills) | Reviews skills without edits and traces failures to the appropriate remedy |
+| [`commit-messages`](skills/commit-messages) | Organises changes into reviewable commits and writes grounded messages while preserving user work |
 | [`dependabot-pr-review`](skills/dependabot-pr-review) | Reviews one or all open Dependabot PRs and gives a merge / verify / investigate / hold verdict |
 | [`do-release`](skills/do-release) | Runs a package release workflow |
 | [`technical-writing`](skills/technical-writing) | Writes and edits Markdown to the repository's style guide, and checks it with the repository's linters |
 
 ## Installing
+
+The catalogue describes the source checkout. Entries under `[Unreleased]`
+in [the changelog](CHANGELOG.md) are not available in published bundles yet.
+Use the development instructions below to work on an unreleased skill.
 
 Each release is published as a versioned bundle, installed with
 [agent-manager](https://github.com/ai-agent-manager/agent-manager) into Claude

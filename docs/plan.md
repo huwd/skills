@@ -7,7 +7,7 @@ catalogue that installs into every harness I use (Claude Code, Codex,
 OpenCode) with one command, and that other people could consume.
 
 Starter set: **dependabot-pr-review**, **technical-writing**,
-**atomic-commits**, **general**.
+**commit-messages** (formerly proposed as `atomic-commits`), **general**.
 
 Order of work:
 
@@ -146,9 +146,9 @@ skills/                              # agent-manager + skills CLI scan root
       github-api.md                  # curl/jq command set
       github-cli.md                  # gh fallback command set
       output-format.md               # report + comment templates
-  atomic-commits/
+  commit-messages/
     SKILL.md
-    scripts/check-diff-size.sh       # optional nudge, harness-agnostic
+    references/index-and-checks.md  # mixed staging and validation boundaries
     README.md
   general/
     SKILL.md
@@ -272,7 +272,7 @@ what the report says was skipped. It has a waiting consumer in
 cost is that the eval sandbox needs `markdownlint-cli2`, Vale, its styles
 and an en_GB dictionary available offline.
 
-`atomic-commits` is the fallback, since it needs only git. `dependabot-pr-review`
+`commit-messages` is another local eval target. `dependabot-pr-review`
 evals come back later, using real, already-resolved PRs as read-only
 fixtures rather than mocks.
 
@@ -300,7 +300,7 @@ Done differently from the original plan: see
 - [ ] Report the two agent-manager bugs found: `/tree/<ref>` pins truncate
       refs containing `/`, and HTTP discovery ignores the base URL's path.
 
-## Phase 4: technical-writing, atomic-commits and general
+## Phase 4: technical-writing, commit-messages and general
 
 ### technical-writing
 
@@ -328,25 +328,33 @@ to the system profile, so tools from `nix shell` aren't visible. Fixtures
 work around it by baking resolved binary paths into their own lint
 scripts at scaffold time.
 
-### atomic-commits
+### commit-messages
 
-Merge our commit standards (Conventional Commits, 50/72, why-bodies, "no
-'and' in the subject") with thoughtbot's atomic criteria (passes CI,
-deployable, no dead code; one kind of work per commit; ~200-line PRs).
+[Issue #25](https://github.com/huwd/skills/issues/25) replaces the proposed
+`atomic-commits` skill with one entry point for reviewable commit series,
+message drafting and requested checkpoints. The [design note](commit-messages-design.md)
+records the sources and scope. There is no automatic commit or diff-size hook.
 
-**One conflict to resolve first:** our TDD cycle commits and pushes a *red*
-(failing-tests) commit. thoughtbot's rule is "every commit passes CI". Options:
+Project rules take precedence over defaults. This catalogue follows the
+shared Conventional Commit and 50/72 policy, including explicit red test
+checkpoints on feature branches. Expected assertion failures are recorded
+honestly; hooks, signing and merge gates remain in force. Tests are not
+marked pending to disguise a red result. Other projects normally use a
+passing logical unit with its regression test. File count and "and" are
+diagnostic hints, not mechanical split rules.
 
-- (a) Squash red into green before pushing.
-- (b) Allow red commits on branches but require the PR tip to be green, with
-  merge-commit history keeping the narrative.
-- (c) Mark red tests pending/xfail so the red commit is still CI-green.
+Silent projects use Conventional Commits by default; old history cannot
+relax that format. Review units are chosen by purpose and dependency,
+including when several concerns share files. The series explains the result
+to a reviewer instead of preserving every development attempt.
 
-My lean is (c) or (a). It needs a call.
+- [x] Resolve message formatting, authorisation and red-checkpoint policies.
+- [x] Add the skill and focused mixed-staging and validation guidance.
+- [x] Define synthetic cases and controls for their git-state graders,
+      including fallback formatting and a mixed-file review series.
+- [ ] Record local with/without-skill comparisons and their limits.
 
-The diff-size nudge hook is Claude-only and agent-manager doesn't install
-hooks. Ship it as an optional script in `scripts/`, with wiring documented
-per harness, rather than making the skill depend on it.
+The skill remains under `[Unreleased]`; bundle release preparation is separate.
 
 ### general
 
@@ -397,7 +405,9 @@ trade-offs and the decision to separate authoring and review.
    repo, public from day one.
 2. **What is `general`?** Paused until after dependabot-pr-review. Leading
    option: the base rules wanted in every repo, as a skill.
-3. **Red-commit conflict** in atomic-commits: (a), (b) or (c)?
+3. ~~**Red-commit conflict**~~ Resolved for `commit-messages`: explicit
+   project policy permits expected red checkpoints, while preserving hooks
+   and merge gates. See the [design note](commit-messages-design.md).
 4. **`do-release`**: moved here with the others; bring it up to the new
    format in phase 4.
 5. ~~**Evals location:**~~ Decided: a parallel `evals/<skill>/` tree at the

@@ -13,6 +13,7 @@ scope: system
 skills:
   - authoring-skills
   - reviewing-skills
+  - commit-messages
   - dependabot-pr-review
   - do-release
   - technical-writing
