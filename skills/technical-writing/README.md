@@ -3,6 +3,8 @@
 An agent skill for writing and editing Markdown documentation to a
 repository's own standard. The agent:
 
+- plans a new document around its reader and purpose, and keeps wording
+  from the working session out of it
 - finds and follows the repository's style guide, falling back to plain
   British English in the GOV.UK style
 - checks its work with the repository's markdownlint and Vale setup,
@@ -22,6 +24,8 @@ vocabulary entries needs the user's approval.
   commands
 - `references/linters.md`: running and reading markdownlint and Vale, and
   the generic layer
+- `references/reader-and-purpose.md`: document types, session wording to
+  replace, and the cold read
 - `references/style-defaults.md`: the fallback house style
 - `assets/vale/`: the generic Vale layer (see below)
 
@@ -82,11 +86,19 @@ The fallback style in `references/style-defaults.md` summarises the
 by the Government Digital Service, used under the
 [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
 
+The document types in `references/reader-and-purpose.md` follow
+[Diátaxis](https://diataxis.fr/). Its guidance on one job for each page
+and on the reader who has only the page draws on the documentation skills
+in [gitlab-org/ai/skills](https://gitlab.com/gitlab-org/ai/skills) (MIT).
+No text is copied from them.
+
 The linting lessons come from setting up documentation checks in
 [huwd/declarative_laptop](https://github.com/huwd/declarative_laptop), the
 skill's first user.
 
 ## Changelog
 
-- **Unreleased:** first version. Discovers the style guide and tools,
+- **0.2.0:** plans new documents around their reader, purpose and type.
+  Adds a cold read to the checks, and a reader line to the report.
+- **0.1.0:** first version. Discovers the style guide and tools,
   writes, checks, fixes and reports. Ships the generic Vale layer.
