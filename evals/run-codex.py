@@ -126,11 +126,18 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n")
 
 
-def isolated_config(model, effort):
+def isolated_config(model, effort, fixture_git=False):
     lines = [f"model = {json.dumps(model)}",
              f"model_reasoning_effort = {json.dumps(effort)}",
-             'approval_policy = "never"', 'sandbox_mode = "workspace-write"',
-             "[skills.bundled]", "enabled = false", "[agents]", "enabled = false"]
+             'approval_policy = "never"']
+    if fixture_git:
+        lines += ['default_permissions = "fixture-git"',
+                  '[permissions.fixture-git]', 'extends = ":workspace"',
+                  '[permissions.fixture-git.filesystem.":workspace_roots"]',
+                  '".git" = "write"', '[permissions.fixture-git.network]', 'enabled = false']
+    else:
+        lines += ['sandbox_mode = "workspace-write"']
+    lines += ["[skills.bundled]", "enabled = false", "[agents]", "enabled = false"]
     # CODEX_HOME isolates config/plugins, but ~/.agents/skills is a separate
     # discovery root. Disable those skills by both their scanned and real paths.
     paths = set()
@@ -148,6 +155,8 @@ def main():
     parser.add_argument("--case", required=True)
     parser.add_argument("--suite", default="technical-writing")
     parser.add_argument("--skill", help="Skill to install (defaults to the suite name)")
+    parser.add_argument("--allow-fixture-git", action="store_true",
+                        help="Allow writes to the disposable workspace's .git; never the source checkout")
     parser.add_argument("--ref", action="append", required=True)
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--model", required=True)
@@ -163,7 +172,15 @@ def main():
     root = Path(__file__).resolve().parents[1]
     suite = root / "evals" / args.suite
     case = suite / args.case
-    prompt_config, prompt = frontmatter(case / "prompt.md")
+    manifest = case / "codex-case.yaml"
+    if manifest.exists():
+        requirements = yaml.safe_load(manifest.read_text())
+        if requirements.get("requires_fixture_git") and not args.allow_fixture_git:
+            parser.error("This case requires --allow-fixture-git for its disposable repository")
+    prompt_path = case / "prompt.md"
+    if not prompt_path.exists():
+        prompt_path = case / "task.md"
+    prompt_config, prompt = frontmatter(prompt_path)
     graders = {p.stem: frontmatter(p)[0] for p in sorted((case / "graders").glob("*.md"))}
     for name, spec in graders.items():
         if spec["type"] not in ("regex", "tool_used", "script") or (
@@ -190,6 +207,7 @@ def main():
     report = {"harness": "codex", "version": subprocess.check_output(["codex", "--version"], text=True).strip(),
               "model": args.model, "effort": args.effort, "case": args.case,
               "suite": args.suite, "skill": skill_name,
+              "fixtureGitWritable": args.allow_fixture_git,
               "runsPerRef": args.runs, "sources": snapshots,
               "fixtureHashes": {str(p.relative_to(case)): hashlib.sha256(p.read_bytes()).hexdigest()
                                 for p in sorted(case.rglob("*")) if p.is_file()},
@@ -204,7 +222,7 @@ def main():
             parser.error("Saved Codex login required (auth.json was not found)")
         shutil.copyfile(auth, private / "auth.json")
         (private / "auth.json").chmod(0o600)
-        (private / "config.toml").write_text(isolated_config(args.model, args.effort))
+        (private / "config.toml").write_text(isolated_config(args.model, args.effort, args.allow_fixture_git))
         # Capture config without credentials so the experiment can be audited.
         shutil.copyfile(private / "config.toml", output / "codex-config.toml")
         env = dict(os.environ, CODEX_HOME=str(private), GIT_CONFIG_COUNT="1",
@@ -232,8 +250,10 @@ def main():
                         skill.parent.mkdir(parents=True)
                         shutil.copytree(Path(source["source"]) / f"skills/{skill_name}", skill)
                     command = ["codex", "exec", "--json", "--ephemeral", "--ignore-rules",
-                               "--sandbox", "workspace-write", "--color", "never",
+                               "--color", "never",
                                "--cd", str(workspace), "--output-last-message", str(run_dir / "response.txt"), "-"]
+                    if not args.allow_fixture_git:
+                        command[2:2] = ["--sandbox", "workspace-write"]
                     (run_dir / "prompt.txt").write_text(prompt + "\n")
                     write_json(run_dir / "command.json", command)
                     code = execute(command, workspace, env, run_dir / "events.jsonl", run_dir / "stderr.log",
