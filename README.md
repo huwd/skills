@@ -47,8 +47,10 @@ Record skill changes under `## [Unreleased]` in
 [`CHANGELOG.md`](CHANGELOG.md). Release preparation is a separate step:
 increase the root [`VERSION`](VERSION) and move the selected entries into
 a matching `## [X.Y.Z]` section. Several skill updates can share a release.
-Normally increment the bundle patch number; choose minor or major
-deliberately for larger changes.
+Choose the bundle bump from the changes since the previous release: patch
+for fixes, minor for new skills or backwards-compatible functionality, and
+major for breaking changes. Individual skill versions remain independent
+of the bundle version.
 
 After the merged commit passes CI on `main`, the Release workflow creates
 `vX.Y.Z`, builds the bundle and checksum, attaches them to a GitHub Release,
