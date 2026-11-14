@@ -180,7 +180,7 @@ Re-run the checks after fixing, until errors are gone.
 Keep it short:
 
 ```text
-Reader and purpose: contributors changing the cache; why SQLite was chosen
+Reader and purpose: contributors changing the worker; why Redis streams were chosen
 Style guide: docs/style-guide.md
 Checks:
 - markdownlint-cli2 (just docs-lint): pass

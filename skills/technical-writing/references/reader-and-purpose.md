@@ -47,21 +47,21 @@ location doesn't make it obvious. Start with specifics, not scene-setting.
 Before:
 
 ```markdown
-# Cache research brief
+# Queue research brief
 
 Implement issue 12. Research reviewed on 4 March. The user's decision is
-to use SQLite.
+to use Redis streams.
 ```
 
 After:
 
 ```markdown
-# Design of the sync cache
+# Design of the job queue
 
-`tidy sync` caches parsed manifests in a SQLite database, which cut a
-sync of the largest test repository from 41 seconds to 6. This note is
-for contributors changing the cache. It records why SQLite was chosen
-over a JSON file and a background daemon.
+The worker takes jobs from a Redis stream, which ended the duplicate
+deliveries seen when it polled the database. This note is for
+contributors changing the worker. It records why Redis streams were
+chosen over database polling and a hosted queue.
 ```
 
 ## Keep the session out of the document
@@ -72,7 +72,7 @@ documents drafted by an agent.
 
 | Session wording | Write instead |
 | --------------- | ------------- |
-| "the user", "as requested", "the maintainer asked for" | The decision itself, with a named role only if it matters: "The cache uses SQLite" |
+| "the user", "as requested", "the maintainer asked for" | The decision itself, with a named role only if it matters: "The worker uses Redis streams" |
 | "we discussed", "as agreed earlier" | The fact, with a link to its source |
 | "this change", "this PR", "the new approach" | The name of the thing, with a link to the pull request or issue |
 | "now", "currently", "recently", "yesterday" | An absolute date or a version |
@@ -92,14 +92,15 @@ answer, so rewrite the sentence as a statement with its reason.
 Before:
 
 ```markdown
-Keep the schema to one table. Do not cache auth tokens.
+Keep one stream per tenant. Do not put payloads over 1 MB on the stream.
 ```
 
 After:
 
 ```markdown
-The schema is one table, which keeps migrations simple. Auth tokens are
-never cached, so a leaked cache file exposes no credentials.
+Each tenant has its own stream, so one tenant's backlog can't delay
+another. Payloads over 1 MB go to object storage and the job carries
+their key, which keeps the stream small.
 ```
 
 Put work that remains under one heading, such as "Open questions", with a
