@@ -118,6 +118,9 @@ jobs:
       - name: Test version and release scripts
         run: python3 -m unittest discover -s .github/scripts/tests -p "test_*.py"
 
+      - name: Test Codex eval grading (no model calls)
+        run: python3 -m unittest discover -s evals/tests -p "test_*.py"
+
       - name: Run the .github/scripts tests
         run: npx --yes bats@1.13.0 .github/scripts/tests/
 
