@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: brief-from-conversation
+description: A decision given only in the conversation becomes a brief that stands alone, without session wording or work orders.
+tags: [technical-writing, audience]
+context:
+  scaffold_script: scaffold.sh
