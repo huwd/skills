@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: design-note-from-session
+description: Session notes become a design note that orients a new reader, drops session wording and states decisions instead of repeating work orders.
+tags: [technical-writing, audience]
+context:
+  scaffold_script: scaffold.sh
