@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- technical-writing 0.2.0: plan new documents around their reader, purpose
+  and type; keep session wording and stray instructions out of records;
+  read new documents cold before finishing.
+
 ## [0.1.0]
 
 - Publish reproducible, checksummed skill bundles through GitHub Releases
