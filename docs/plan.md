@@ -352,7 +352,10 @@ to a reviewer instead of preserving every development attempt.
 - [x] Add the skill and focused mixed-staging and validation guidance.
 - [x] Define synthetic cases and controls for their git-state graders,
       including fallback formatting and a mixed-file review series.
-- [ ] Record local with/without-skill comparisons and their limits.
+- [x] Record local with/without-skill comparisons and their limits in the
+      [evaluation report](commit-messages-evaluation.md): the initial nine cases
+      passed in both arms. Follow-up runs demonstrate the new format default,
+      with preserved project overrides and mixed-file series behaviour.
 
 The skill remains under `[Unreleased]`; bundle release preparation is separate.
 
