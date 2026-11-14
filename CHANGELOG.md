@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0]
+
 - Add commit-messages 0.1.0: plan reviewable commit series, use Conventional
   Commits by default and make requested commits while preserving existing
   staging, hooks and signing.
