@@ -5,6 +5,9 @@ compares the requested git state and message quality with and without the
 skill. The fixtures and their failure inputs are synthetic, not production
 incident records. No case has a remote repository or a real signing service.
 
+The [evaluation report](../../docs/commit-messages-evaluation.md) records
+the completed comparison and its limits.
+
 ## Run the comparison
 
 From the repository root, using Python with PyYAML and a saved Codex login:
