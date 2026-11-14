@@ -6,8 +6,8 @@ Example (run from the repository root, with Vale on PATH):
       --runs 10 --model gpt-6.1-sol --effort medium
 
 Scaffolds execute as the caller. Each run keeps its workspace, JSONL events,
-stderr, final response and verdicts. Only regex and Bash/Skill graders are
-supported. Skill use is a diagnostic proxy: a successful command reads the
+stderr, final response and verdicts. Regex, Bash/Skill and trusted local
+Python script graders are supported. Skill use is a diagnostic proxy: a successful command reads the
 installed SKILL.md and returns its content. It is not a Claude Skill event.
 """
 
@@ -21,6 +21,7 @@ import re
 import shutil
 import signal
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -44,9 +45,24 @@ def completed_items(events):
     return [e["item"] for e in events if e.get("type") == "item.completed"]
 
 
-def grade(spec, workspace, events):
+def grade(spec, workspace, events, skill_name="technical-writing", grader_dir=None):
     kind = spec["type"]
     items = completed_items(events)
+    if kind == "script":
+        if grader_dir is None:
+            raise ValueError("Script graders need their source directory")
+        script = (grader_dir / spec["script"]).resolve()
+        try:
+            result = subprocess.run(
+                [sys.executable, str(script), str(workspace), spec["check"]],
+                input=json.dumps(events), text=True, capture_output=True,
+                timeout=30, check=True)
+            verdict = json.loads(result.stdout)
+            if not isinstance(verdict, dict) or type(verdict.get("passed")) is not bool:
+                raise ValueError("expected a boolean passed field")
+            return verdict
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            raise RuntimeError(f"Local assessor failed: {script}: {exc}") from exc
     if kind == "regex":
         target = spec.get("target", {})
         if target.get("source", "response") == "file":
@@ -74,12 +90,15 @@ def grade(spec, workspace, events):
     elif tool == "Skill":
         # Require returned skill content as well as the path; mentions alone
         # are not evidence that the agent loaded the tested skill.
-        skill = workspace / ".agents/skills/technical-writing/SKILL.md"
-        content = skill.read_text()
-        signature = content[content.index("# Technical Writing"):][:160]
-        count = sum(i.get("exit_code") == 0
-                    and ".agents/skills/technical-writing/SKILL.md" in i["command"]
-                    and signature in i.get("aggregated_output", "") for i in commands)
+        relative = f".agents/skills/{skill_name}/SKILL.md"
+        skill = workspace / relative
+        count = 0
+        if skill.is_file():
+            content = skill.read_text()
+            signature = content[content.index("# "):][:160]
+            count = sum(i.get("exit_code") == 0
+                        and relative in i["command"]
+                        and signature in i.get("aggregated_output", "") for i in commands)
     else:
         raise ValueError(f"Unsupported tool grader: {tool}")
     return {"passed": spec.get("min", 1) <= count <= spec.get("max", float("inf")),
@@ -127,6 +146,8 @@ def isolated_config(model, effort):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--case", required=True)
+    parser.add_argument("--suite", default="technical-writing")
+    parser.add_argument("--skill", help="Skill to install (defaults to the suite name)")
     parser.add_argument("--ref", action="append", required=True)
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--model", required=True)
@@ -135,23 +156,32 @@ def main():
     args = parser.parse_args()
     if args.runs < 1:
         parser.error("--runs must be positive")
+    skill_name = args.skill or args.suite
+    if any(not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", value)
+           for value in (args.suite, skill_name, args.case)):
+        parser.error("suite, skill and case must be lowercase hyphenated names")
     root = Path(__file__).resolve().parents[1]
-    case = root / "evals/technical-writing" / args.case
-    if case.parent != root / "evals/technical-writing":
-        parser.error("--case must name a direct child of evals/technical-writing")
+    suite = root / "evals" / args.suite
+    case = suite / args.case
     prompt_config, prompt = frontmatter(case / "prompt.md")
     graders = {p.stem: frontmatter(p)[0] for p in sorted((case / "graders").glob("*.md"))}
     for name, spec in graders.items():
-        if spec["type"] not in ("regex", "tool_used") or (
+        if spec["type"] not in ("regex", "tool_used", "script") or (
             spec["type"] == "tool_used" and spec["tool"] not in ("Bash", "Skill")
         ):
             parser.error(f"Unsupported grader {name}: {spec}")
     output = (args.output_dir or root / "evals/results" / time.strftime("codex-%Y%m%dT%H%M%SZ", time.gmtime())).resolve()
     output.mkdir(parents=True, exist_ok=False)
+    shutil.copyfile(__file__, output / "runner.py")
+    shutil.copytree(suite, output / "suite", ignore=shutil.ignore_patterns("__pycache__"))
+    case = output / "suite" / args.case
     snapshots = []
     for index, ref in enumerate(args.ref):
+        if ref == "none":
+            snapshots.append({"ref": ref, "sha": None, "source": None})
+            continue
         sha = git(root, "rev-parse", f"{ref}^{{commit}}").decode().strip()
-        archive = git(root, "archive", sha, "skills/technical-writing")
+        archive = git(root, "archive", sha, f"skills/{skill_name}")
         dest = output / f"source-{index}"
         dest.mkdir()
         with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
@@ -159,6 +189,7 @@ def main():
         snapshots.append({"ref": ref, "sha": sha, "source": str(dest)})
     report = {"harness": "codex", "version": subprocess.check_output(["codex", "--version"], text=True).strip(),
               "model": args.model, "effort": args.effort, "case": args.case,
+              "suite": args.suite, "skill": skill_name,
               "runsPerRef": args.runs, "sources": snapshots,
               "fixtureHashes": {str(p.relative_to(case)): hashlib.sha256(p.read_bytes()).hexdigest()
                                 for p in sorted(case.rglob("*")) if p.is_file()},
@@ -196,9 +227,10 @@ def main():
                                             run_dir / "scaffold.stdout", run_dir / "scaffold.stderr", 120)
                     if scaffold_code:
                         raise RuntimeError(f"Scaffold exited {scaffold_code}; see scaffold.stderr")
-                    skill = workspace / ".agents/skills/technical-writing"
-                    skill.parent.mkdir(parents=True)
-                    shutil.copytree(Path(source["source"]) / "skills/technical-writing", skill)
+                    if source["source"] is not None:
+                        skill = workspace / f".agents/skills/{skill_name}"
+                        skill.parent.mkdir(parents=True)
+                        shutil.copytree(Path(source["source"]) / f"skills/{skill_name}", skill)
                     command = ["codex", "exec", "--json", "--ephemeral", "--ignore-rules",
                                "--sandbox", "workspace-write", "--color", "never",
                                "--cd", str(workspace), "--output-last-message", str(run_dir / "response.txt"), "-"]
@@ -211,7 +243,13 @@ def main():
                         raise RuntimeError(f"Codex run failed (exit {code}); see events.jsonl and stderr.log")
                     if not any(e["type"] == "turn.completed" for e in events):
                         raise RuntimeError("No completed turn in Codex transcript")
-                    record["graders"] = {name: grade(spec, workspace, events) for name, spec in graders.items()}
+                    record["graders"] = {}
+                    for name, spec in graders.items():
+                        if (source["source"] is None and spec.get("tool") == "Skill"
+                                and spec.get("min", 1) > 0):
+                            continue  # Positive selection has no meaning in the no-skill arm.
+                        record["graders"][name] = grade(
+                            spec, workspace, events, skill_name, case / "graders")
                     scored = [v for v in record["graders"].values() if not v.get("diagnostic")]
                     record["score"] = sum(v["passed"] for v in scored) / len(scored)
                     record["passed"] = all(v["passed"] for v in record["graders"].values())
