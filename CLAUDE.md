@@ -19,3 +19,14 @@ current status, and `docs/skill-format.md` for authoring conventions.
 
 Follow the global standard in `huwd/standards` (`standards/CLAUDE.md`). Never
 commit directly to `main`; branch as `<type>/<short-description>`.
+
+Commit messages are technical writing. Apply `technical-writing` to their
+prose and `commit-messages` to diff selection, commit boundaries and requested
+git operations. The shared standards remain the authority for this repo's
+Conventional Commits, 50-character subjects and 72-character body wrapping.
+
+The shared TDD workflow explicitly permits red test checkpoints on feature
+branches. Record the expected failure honestly, keep unrelated checks passing
+and preserve hooks and signing. An unavailable tool or rejected hook is not
+an expected red test failure. Behavioural skill evals use a measured baseline
+shortcoming as their red step; they do not require breaking static CI.
