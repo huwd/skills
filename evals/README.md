@@ -51,6 +51,17 @@ another suite and `--skill NAME` when its skill has a different name.
 skill-read diagnostics are omitted in that arm; negative selection checks
 still apply. The runner keeps a copy of itself and the suite with the results.
 
+Codex-only cases use `codex-case.yaml` and `task.md`, keeping their script
+graders outside Claude's `case.yaml`/`prompt.md` discovery. The
+[commit-messages suite](commit-messages/README.md) uses this format.
+
+For cases that must create fixture commits, `--allow-fixture-git` selects
+a profile extending Codex's workspace permissions with write access to the
+disposable workspace's `.git`. Command networking remains disabled; the
+source checkout is not a writable workspace. Other protected paths retain
+their normal permissions. Cases declaring `requires_fixture_git: true`
+reject a run without this flag before calling a model.
+
 The runner:
 
 - alternates the two refs, reversing their order for each pair
