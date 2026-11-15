@@ -8,6 +8,9 @@
   repositories that enable the `Vale` style. Its spelling rule also accepts
   possessives such as "skill's", which the en_GB dictionary rejects.
 
+- dependabot-pr-review 0.1.1: British spellings throughout, including the
+  "Merge Behaviour" heading.
+
 - technical-writing 0.3.0: plan a document's message and outline before
   drafting, keep evidence with the point it supports, inventory facts
   before restructuring, and keep corrections and small additions

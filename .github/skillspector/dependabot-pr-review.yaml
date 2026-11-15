@@ -1,7 +1,8 @@
 # SkillSpector baseline — findings listed here are suppressed on future scans.
 # Reviewed 2026-10-05 against SkillSpector 2.12.0 static mode (--no-llm).
 # Hashes refreshed 2026-10-12 after adding version metadata shifted lines;
-# the findings, scoped rule and review reasons are unchanged.
+# the findings, scoped rule and review reasons are unchanged. Refreshed
+# 2026-11-15 after British spelling edits; findings and reasons unchanged.
 # Each entry says why the finding is accepted. Fingerprints are exact, so an
 # edit to the matching text or a scanner upgrade brings the finding back for
 # review: check it, then regenerate with `skillspector baseline` and restore
@@ -14,15 +15,15 @@ rules:
   message: "*https://api.github.com/*"
   reason: "Expected: the skill calls the GitHub REST API at api.github.com, the only host it contacts. Scoped to that exact host so any other URL is still reported."
 fingerprints:
-- hash: sha256:ec4fa3e6476b34bf78f2dfcdc9ce58902ed69eb3cda4b041a57d5e467a8f4126
+- hash: sha256:43c08887bbcdf53d19969dc1c85566ae6940705aa89494824765eca00f9bfb7f
   rule_id: AE1
   file: SKILL.md
   reason: "Scanner limit, not evasion: a static parser span limit stopped it fully inspecting references/github-cli.md (reason_code static_parse_limit). The file is plain gh commands."
-- hash: sha256:c57aca77e4ecf92ab93b52f034d67286653fe4c56736893d444bf1286cd49c2b
+- hash: sha256:031bafd26bbc2772403bb3b242370549233d3e65787e274a5070188da069c846
   rule_id: AR2
   file: SKILL.md
   reason: "False positive: matches 'Do not judge CI from the check list alone', an instruction to check required CI more carefully, not to drop warnings."
-- hash: sha256:68d9a679036dbdd4ed5710465f97e0c7b86dc833b1748908d45f51628b3a3c82
+- hash: sha256:f1674506629bd8418add36f0dcd4cdebce92835181394c0e4c561d8fcaff8be1
   rule_id: EA2
   file: SKILL.md
   reason: "False positive: matches 'Do not ask the user for a token and do not print, read, or persist secrets', a safety rule."
