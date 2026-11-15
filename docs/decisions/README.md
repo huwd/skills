@@ -64,3 +64,4 @@ the rest of it as it was. Fixing typos and broken links is fine.
 | [0002](0002-static-checks-in-ci.md) | Gate pull requests on static checks only, and run them locally too | Accepted |
 | [0003](0003-rulesets-as-code.md) | Keep the repository's rulesets as code, applied by hand | Accepted |
 | [0004](0004-install-from-versioned-bundles.md) | Install skills from versioned bundles on GitHub Pages | Accepted |
+| [0005](0005-check-prose-with-vale.md) | Check prose with Vale from a Nix flake, before push and in CI | Proposed |

@@ -1,0 +1,11 @@
+# British English (-ise) spelling. Replaces Vale.Spelling, which is en_US.
+extends: spelling
+message: "'%s' isn't in the British English dictionary or the Skills vocabulary."
+level: error
+dictionaries:
+  - en_GB
+# Plurals of acronyms, such as PRs; see references/linters.md in technical-writing
+filters:
+  - '[A-Z]{2,}s'
+  # Possessives, such as "skill's": the en_GB dictionary rejects most of them
+  - "[A-Za-z]+['’]s"
