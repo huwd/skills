@@ -1,0 +1,4 @@
+name: coherent-addition
+runner: codex
+skill: technical-writing
+scaffold_script: scaffold.sh
