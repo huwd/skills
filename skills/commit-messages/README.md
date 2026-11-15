@@ -11,6 +11,10 @@ project rules choose otherwise. A project can set its standard in agent
 instructions or a linked guide and commit tooling. Old history alone does
 not override the fallback. This skill does not install an enforcement hook.
 
+Commits an agent prepares disclose its part with an `Assisted-by` or
+`Generated-by` trailer unless project rules say otherwise. The agent
+never adds a human `Signed-off-by`.
+
 This skill is unreleased. For local development, follow the
 [development symlink instructions](../../docs/skill-format.md#development-symlinks),
 using `commit-messages` as the skill directory name. A later bundle release
@@ -23,6 +27,8 @@ will make it available through agent-manager.
   staging, validation failures and explicit red checkpoints.
 - [references/reviewable-series.md](references/reviewable-series.md): logical
   units, dependency order and authorised history cleanup.
+- [references/ai-disclosure.md](references/ai-disclosure.md): the default
+  AI disclosure trailers, sign-off boundary and their trade-offs.
 - [LICENSE](LICENSE): MIT terms and retained upstream notice.
 
 The [design note](../../docs/commit-messages-design.md) explains the policy

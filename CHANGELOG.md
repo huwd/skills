@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- commit-messages 0.2.0: disclose the agent's part in commits with an
+  `Assisted-by` or `Generated-by` trailer when project rules are silent,
+  keep tool-added `Co-Authored-By` and leave `Signed-off-by` to the human.
+
 ## [0.2.0]
 
 - Add commit-messages 0.1.0: plan reviewable commit series, use Conventional

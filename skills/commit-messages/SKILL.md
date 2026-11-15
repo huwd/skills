@@ -8,7 +8,7 @@ description: >-
 license: MIT (see LICENSE)
 compatibility: Uses git and the target repository's existing validation tools.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   source: Adapted from gitlab-org/ai/skills commit-messages 1.0.3 (MIT, GitLab B.V.).
 ---
 
@@ -26,8 +26,9 @@ Read repository instructions, commit tooling and recent messages before
 choosing a format. Explicit project rules and configured commit tooling
 override the defaults below. History informs scope names and wording, but
 does not silently replace Conventional Commits when no format is stated.
-Include hooks, signing, attribution and sign-off policies; do not define
-an AI disclosure policy as a side effect. Repository instructions can state
+Include hooks, signing, attribution and sign-off policies. A project's AI
+disclosure rules override this skill's default; adding a trailer to a commit
+does not write a policy into the repository. Repository instructions can state
 the standard directly or point to its maintained guide. Report conflicting
 explicit requirements rather than guessing which to ignore.
 
@@ -64,6 +65,16 @@ Without explicit project-format rules, use Conventional Commits:
 - Follow the project's reference and trailer format. Use a supplied full
   issue URL when no shorthand convention is established. A reference does
   not replace an explanation. Never invent a human sign-off or attribution.
+- When you wrote or materially shaped the change, disclose it as the
+  project says. Without project rules, add one `Generated-by` or
+  `Assisted-by: <tool>:<model>` trailer, with the model identifier exactly
+  as your context states it or the tool alone. Keep a tool-added
+  `Co-Authored-By`; see [references/ai-disclosure.md](references/ai-disclosure.md).
+  Disclosing your own part is not inventing attribution.
+- Never add `Signed-off-by`, whether in a message file or with
+  `git commit -s`. A project rule requiring sign-off binds the human; it
+  does not ask you to add their name. Leave that change uncommitted, with
+  its drafted message, and say why.
 
 Report validation only when observed, and distinguish the working copy
 from the selected commit snapshot. If the reason is unknown, state that
