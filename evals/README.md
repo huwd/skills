@@ -149,7 +149,7 @@ selection indicators and are excluded from task scores. Negative selection
 checks marked `arm: both` remain scored in both arms.
 
 Separate files are the runner's discovery format. The two new suites contain
-six cases and 33 grader definitions, not 33 independent scenarios.
+seven cases and 38 grader definitions, not 38 independent scenarios.
 
 ## How the new cases were authored
 
@@ -172,6 +172,7 @@ as authored tests, including whether they reject plausible incorrect results.
 | [Authoring: create](authoring-skills/create) | Preserve a runbook's constraints in a new skill | Checks the name, local version format, an account-flag mention and preserved source text. It does not execute the produced skill or prove the flag is mandatory. |
 | [Authoring: repair](authoring-skills/repair) | Correct a retry rule while preserving polling | Checks references to access failures, pending builds, an increased version and a regression scenario. Text mentions do not prove runtime retry behaviour. |
 | [Authoring: decline](authoring-skills/decline) | Avoid files for an unnecessary skill | Checks the explanation and absence of Edit/Write calls. It can pass without the skill loading. |
+| [Authoring: documentation edit](authoring-skills/doc-edit) | Fix an install path in a skills catalogue's README without initiating authoring or review | Checks the corrected and removed paths, no selection of either skill and no Edit of the skill. A guard: with no plugin, neither skill can load. |
 | [Review: findings](reviewing-skills/review-only) | Identify overly broad triggering and an unwanted push without edits | Checks the finding topics, a test proposal and tool calls. It does not assess every finding's quality. |
 | [Review: diagnose](reviewing-skills/diagnose) | Recognise a missing prerequisite rather than invent a skill defect | Checks the diagnosis, a no-change conclusion and no Edit/Write calls. |
 | [Review: reading only](reviewing-skills/no-trigger) | Explain a skill without initiating authoring or review | Checks the described command, no selection of either skill and no Edit/Write calls. |
