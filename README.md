@@ -49,8 +49,11 @@ increase the root [`VERSION`](VERSION) and move the selected entries into
 a matching `## [X.Y.Z]` section. Several skill updates can share a release.
 Choose the bundle bump from the changes since the previous release: patch
 for fixes, minor for new skills or backwards-compatible functionality, and
-major for breaking changes. Individual skill versions remain independent
-of the bundle version.
+major for breaking changes. Below 1.0.0, while the catalogue is still
+settling, breaking changes take a minor bump instead, and are marked
+**Breaking** in the changelog with what users need to do. From 1.0.0,
+breaking changes take a major bump. Individual skill versions remain
+independent of the bundle version.
 
 After the merged commit passes CI on `main`, the Release workflow creates
 `vX.Y.Z`, builds the bundle and checksum, attaches them to a GitHub Release,
