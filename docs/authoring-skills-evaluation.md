@@ -13,7 +13,8 @@ from the two skills.
 The six cases exercise writing a skill, making a specified correction,
 declining an unnecessary skill, reporting review findings without edits,
 diagnosing a missing tool and reading a skill without initiating review.
-They are synthetic fixtures authored for this PR, not recorded production
+A seventh case, added later, fixes documentation about a skill without
+initiating either workflow. They are synthetic fixtures authored for this PR, not recorded production
 incidents. In particular, the failure transcript in the retry case was written
 as test input; it is not evidence of a failure observed in a real deployment.
 
@@ -51,6 +52,30 @@ remote status checks, exports or pushes, and no writes by the reviewer.
 The command guard in this full comparison was subsequently corrected as
 described below; this table records its original scoring rather than
 silently applying a different measurement.
+
+## Documentation edits in a skills catalogue
+
+The six-case comparison covered reading a skill but no edit request, so it
+could not show whether authoring loads for nearby documentation work. The
+authoring description, "implement a requested change to an existing one",
+is closest to such work in a skills catalogue. A further case asks for a
+corrected install path in the catalogue's README, which describes its one
+skill.
+
+The skills at `4853817` (both 0.1.0) were run three times with the plugin
+on 15 November 2026, using Claude Code 2.1.321 and `claude-opus-5-5`. No
+baseline arm was run: without the plugin neither skill can load, so the
+case is a guard rather than a comparison.
+
+All three runs scored 1.00. Each loaded technical-writing, the expected
+skill for a documentation fix, and neither authoring nor reviewing. Each
+README diff changed exactly the two path lines. One run edited with `sed`,
+which the Edit-call guard cannot see, so the fixture skill was compared with
+a fresh scaffold; it was unchanged in every run.
+
+This shows the boundary holding for one clear documentation edit. It does
+not cover a human README inside a skill folder, where the repository's
+versioning rules make the right answer less clear.
 
 ## Why passing is insufficient
 
