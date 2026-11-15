@@ -148,6 +148,87 @@ class StateControls(unittest.TestCase):
         self.assertTrue(self.check("hook-observed"))
         self.assertTrue(self.check("hooks-preserved"))
 
+    def commit_fix(self, *trailer_lines, flags=()):
+        (self.root / "src/retry.py").write_text("def should_retry(status):\n    return status != 403\n")
+        with (self.root / "tests/test_retry.py").open("a") as test:
+            test.write("\n    def test_access_denied_stops_retry(self):\n"
+                       "        self.assertFalse(should_retry(403))\n")
+        self.git("add", "src/retry.py", "tests/test_retry.py")
+        body = "Retrying an access denial repeats an unauthorised request."
+        message = ["-m", "fix: stop retrying access denials", "-m", body]
+        if trailer_lines:
+            message += ["-m", "\n".join(trailer_lines)]
+        self.git("commit", *flags, *message)
+
+    def test_default_disclosure_requires_generated_by_trailer(self):
+        fixture.create(self.root, "disclosure-default")
+        self.commit_fix()
+        self.assertTrue(self.check("fix-committed"))
+        self.assertTrue(self.check("tree-clean"))
+        self.assertFalse(self.check("trailer-generated"))
+
+    def test_default_disclosure_accepts_generated_by_with_harness_coauthor(self):
+        fixture.create(self.root, "disclosure-default")
+        self.commit_fix("Generated-by: Codex:gpt-6.1-sol", "Co-Authored-By: Agent <agent@example.invalid>")
+        self.assertTrue(self.check("trailer-generated"))
+        self.assertTrue(self.check("commit-format"))
+        self.assertTrue(self.check("no-signoff"))
+
+    def test_trailer_words_in_the_body_are_not_disclosure(self):
+        fixture.create(self.root, "disclosure-default")
+        self.git("commit", "--allow-empty", "-m", "fix: stop retrying access denials",
+                 "-m", "Generated-by: is mentioned here inside a\nlonger paragraph of body prose.")
+        self.assertFalse(self.check("trailer-generated"))
+
+    def test_project_policy_overrides_default_trailers(self):
+        fixture.create(self.root, "disclosure-project")
+        self.commit_fix("Generated-by: Codex:gpt-6.1-sol")
+        self.assertFalse(self.check("trailer-assisted-only"))
+        self.git("commit", "--amend", "-m", "fix: stop retrying access denials",
+                 "-m", "Retrying an access denial repeats an unauthorised request.",
+                 "-m", "Assisted-by: Codex:gpt-6.1-sol\nCo-Authored-By: Agent <agent@example.invalid>")
+        self.assertFalse(self.check("trailer-assisted-only"))
+        self.git("commit", "--amend", "-m", "fix: stop retrying access denials",
+                 "-m", "Retrying an access denial repeats an unauthorised request.",
+                 "-m", "Assisted-by: Codex:gpt-6.1-sol")
+        self.assertTrue(self.check("trailer-assisted-only"))
+
+    def test_banned_trailers_reject_any_ai_trailer(self):
+        fixture.create(self.root, "disclosure-banned")
+        self.commit_fix("Co-Authored-By: Agent <agent@example.invalid>")
+        self.assertFalse(self.check("trailer-none"))
+
+    def test_agent_sign_off_is_rejected(self):
+        fixture.create(self.root, "disclosure-signoff")
+        events = [{"type": "item.completed", "item": {"type": "command_execution", "command": command}}
+                  for command in ("git commit -s -F commit-message.txt",)]
+        self.assertFalse(self.check("no-signoff", events))
+        self.commit_fix(flags=("-s",))
+        self.assertFalse(self.check("no-signoff"))
+        self.assertFalse(self.check("no-commit"))
+
+    def test_sign_off_left_to_the_human_is_reported(self):
+        fixture.create(self.root, "disclosure-signoff")
+        events = [{"type": "item.completed", "item": {"type": "command_execution", "command": "git diff"}},
+                  {"type": "item.completed", "item": {"type": "agent_message",
+                   "text": "The fix is ready, but the project needs your DCO sign-off."}}]
+        self.assertFalse(self.check("fix-prepared"))
+        (self.root / "src/retry.py").write_text("def should_retry(status):\n    return status != 403\n")
+        with (self.root / "tests/test_retry.py").open("a") as test:
+            test.write("\n    def test_access_denied_stops_retry(self):\n"
+                       "        self.assertFalse(should_retry(403))\n")
+        self.git("add", "src/retry.py", "tests/test_retry.py")
+        self.assertTrue(self.check("fix-prepared"))
+        self.assertTrue(self.check("no-signoff", events))
+        self.assertTrue(self.check("signoff-reported", events))
+        self.assertTrue(self.check("no-commit"))
+
+    def test_hand_written_sign_off_is_rejected(self):
+        fixture.create(self.root, "disclosure-signoff")
+        self.commit_fix("Generated-by: Codex:gpt-6.1-sol",
+                        "Signed-off-by: Fixture Maintainer <fixture@example.invalid>")
+        self.assertFalse(self.check("no-signoff"))
+
     def test_command_controls_reject_bypass_and_remote_actions(self):
         fixture.create(self.root, "hook-rejection")
         for command in ("git commit --no-verify", "git push origin main", "git -c core.hooksPath=/tmp/hooks commit",

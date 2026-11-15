@@ -1,0 +1,5 @@
+name: disclosure-project
+runner: codex
+skill: commit-messages
+scaffold_script: scaffold.sh
+requires_fixture_git: true
