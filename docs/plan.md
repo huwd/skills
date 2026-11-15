@@ -411,8 +411,9 @@ trade-offs and the decision to separate authoring and review.
 3. ~~**Red-commit conflict**~~ Resolved for `commit-messages`: explicit
    project policy permits expected red checkpoints, while preserving hooks
    and merge gates. See the [design note](commit-messages-design.md).
-4. **`do-release`**: moved here with the others; bring it up to the new
-   format in phase 4.
+4. ~~**`do-release`**~~ Replaced by `managing-releases`, which separates
+   shipping changes from releasing them
+   ([#35](https://github.com/huwd/skills/issues/35)).
 5. ~~**Evals location:**~~ Decided: a parallel `evals/<skill>/` tree at the
    plugin root, so evals aren't installed with the skill.
 6. ~~Public from day one?~~ Decided: yes. Attribution for thoughtbot-derived

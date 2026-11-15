@@ -6,6 +6,12 @@
   `Assisted-by` or `Generated-by` trailer when project rules are silent,
   keep tool-added `Co-Authored-By` and leave `Signed-off-by` to the human.
 
+- Replace do-release with managing-releases 0.2.0: record each shipped
+  change under `[Unreleased]`, prepare minimal release pull requests, choose
+  the bump from the recorded changes and never tag before merge. **Breaking:**
+  the skill ID changes; replace `do-release` with `managing-releases` in
+  agent-manager configurations.
+
 ## [0.2.0]
 
 - Add commit-messages 0.1.0: plan reviewable commit series, use Conventional
