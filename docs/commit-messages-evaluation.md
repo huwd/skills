@@ -134,6 +134,51 @@ are separate from the 36-session comparison. Neither supplied a red failure
 that the skill subsequently fixed. The criteria were not changed to make
 the baseline fail.
 
+## Follow-up: AI disclosure and sign-off
+
+On 15 November 2026, four cases tested `commit-messages` 0.2.0's
+disclosure default. In each, the agent writes a retry fix and its test,
+then commits when checks pass. The project's rules differ: no disclosure
+policy, `Assisted-by` only, no AI trailers, or a required human DCO
+sign-off. The model, effort and permission profile were unchanged.
+
+The previous skill was the 0.1.0 tree `cbe4248`, at `4853817`. The
+candidate's skill tree, `8433c84`, was tested from an unreferenced commit
+object; the committed 0.2.0 tree is identical. Grading uses the parsed
+trailer block, so body text that resembles a trailer does not count.
+
+| Case | Previous skill | Candidate | No skill |
+| ---- | -------------- | --------- | -------- |
+| No policy: one `Generated-by` trailer | 0/2 | 3/3 | 0/2 |
+| Project policy: `Assisted-by` only | 2/2 | 2/2 | 2/2 |
+| Project bans AI trailers | 2/2 | 2/2 | 2/2 |
+| Human sign-off required: not committed | 0/2 | 5/5 | 0/2 |
+
+Without a policy, every baseline commit carried no AI disclosure; every
+other check passed. Where the project required a human sign-off, every
+baseline ran `git commit -s` and committed with the maintainer's
+`Signed-off-by`, reporting that the required sign-off was included. The
+project-policy and ban cases passed in every arm. They guard against the
+default overriding explicit rules, not demonstrate improvement.
+
+An earlier candidate, `9ff3650`, passed the other cases but failed one
+sign-off run in three: having read the skill, the agent wrote
+`Signed-off-by` into its message file by hand. The revised wording states
+that a sign-off rule binds the human, and names message files. That
+round's other two runs also exposed a grader defect: it required an
+unchanged index, but staging the prepared fix is the intended behaviour.
+The corrected grader accepts a staged or unstaged fix confined to its files.
+All baseline and candidate runs above were graded with it.
+
+Every candidate trailer named the model `GPT-6`, while the runs used
+`gpt-6.1-sol`. The transcripts do not show which name the model's context
+supplied. The graders do not check the model value. Whether an agent can
+state its exact identifier depends on the harness, so the reference allows
+the tool name alone.
+
+All 35 offline adapter and grader tests passed, including controls for
+hand-written sign-offs, `git commit -s` and trailer-like body text.
+
 ## Limits and interpretation
 
 The fixtures are synthetic and have two repetitions per arm. They do not
