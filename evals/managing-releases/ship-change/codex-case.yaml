@@ -1,0 +1,5 @@
+name: ship-change
+runner: codex
+skill: managing-releases
+scaffold_script: scaffold.sh
+requires_fixture_git: true

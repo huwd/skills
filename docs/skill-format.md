@@ -98,9 +98,9 @@ same inputs and environment. Check outcomes, important actions and nearby
 cases that must remain unaffected, including negative triggers.
 
 Every new skill needs cases for its intended behaviour and discovery;
-behavioural changes need regression coverage. Existing gaps, including
-Dependabot and release evals, remain work to complete rather than examples
-to copy. A spelling or link correction can use focused static checks.
+behavioural changes need regression coverage. Existing gaps, such as the
+missing Dependabot evals, remain work to complete rather than examples to
+copy. A spelling or link correction can use focused static checks.
 
 Run representative cases more than once, read traces and report actual
 results and limitations. Static validity does not establish usefulness,

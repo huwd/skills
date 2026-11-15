@@ -1,0 +1,5 @@
+name: release-ci
+runner: codex
+skill: managing-releases
+scaffold_script: scaffold.sh
+requires_fixture_git: true
