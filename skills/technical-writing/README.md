@@ -5,6 +5,10 @@ repository's own standard. The agent:
 
 - plans a new document around its reader and purpose, and keeps wording
   from the working session out of it
+- decides a document's message and outline before drafting, keeps
+  evidence with the point it supports, and checks no fact is lost when
+  restructuring
+- keeps corrections and small additions to what the task needs
 - finds and follows the repository's style guide, falling back to plain
   British English in the GOV.UK style
 - checks its work with the repository's markdownlint and Vale setup,
@@ -26,6 +30,8 @@ vocabulary entries needs the user's approval.
   the generic layer
 - `references/reader-and-purpose.md`: document types, session wording to
   replace, and the cold read
+- `references/message-and-structure.md`: the message, outline, evidence,
+  fact inventory and proportionality
 - `references/style-defaults.md`: the fallback house style
 - `assets/vale/`: the generic Vale layer (see below)
 
@@ -91,6 +97,12 @@ The document types in `references/reader-and-purpose.md` follow
 and on the reader who has only the page draws on the documentation skills
 in [gitlab-org/ai/skills](https://gitlab.com/gitlab-org/ai/skills) (MIT).
 No text is copied from them.
+
+The reading layers and writing order in
+`references/message-and-structure.md` adapt Prashanth Rao's
+[A framework for technical writing in the age of LLMs](https://thedataquarry.com/blog/a-framework-for-reading-and-writing/).
+The article is about essays and blog posts; its ideas are summarised in
+original wording and applied to repository documents. No text is copied.
 
 The linting lessons come from setting up documentation checks in
 [huwd/declarative_laptop](https://github.com/huwd/declarative_laptop), the

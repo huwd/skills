@@ -14,7 +14,7 @@ compatibility: >-
   Uses markdownlint-cli2 and Vale when the repository or machine provides
   them. Works without either and reports which checks it skipped.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Technical Writing
@@ -61,9 +61,10 @@ order, the search command and where each tool keeps its config.
 
 ## 2. Plan the document
 
-Do this when creating a document or writing a substantial new section.
-Skip it for proofreading, lint fixes and small edits, and don't
-restructure a document the user only asked to tidy.
+Do this when creating a document, writing a substantial new section, or
+revising a document so it serves its reader. Skip it for proofreading,
+lint fixes, corrections and small additions: change only what the task
+needs, and don't restructure a document that already works.
 
 Decide before drafting:
 
@@ -73,6 +74,16 @@ Decide before drafting:
   note, report, changelog) states what was decided or found, and why. A
   guide (tutorial, how-to) tells the reader what to do. Reference is for
   looking things up.
+- **Message:** in one or two sentences, what the reader should know or
+  decide afterwards. If you can't state it, find out or ask before writing.
+- **Outline:** headings that, read alone, give the message and how it
+  develops, ordered for the reader rather than by when the work happened.
+  Each section opens with its point; the facts that support it sit with it.
+
+When restructuring or rewriting from notes, list the source's facts,
+figures, measurements, sources and decisions first, and check each
+survives. Don't invent a decision or
+reason to fill a gap; mark it as an open question.
 
 Three faults follow from skipping this, and all three pass the linters:
 
@@ -87,8 +98,10 @@ Three faults follow from skipping this, and all three pass the linters:
   statement with its reason, and put remaining work under one heading.
 
 [references/reader-and-purpose.md](references/reader-and-purpose.md) has
-the document types, wording to replace, and examples. Read it before
-writing a new document.
+the document types, wording to replace, and examples.
+[references/message-and-structure.md](references/message-and-structure.md)
+covers the message, outline and evidence. Read both before writing or
+restructuring a document.
 
 ## 3. Write
 
@@ -139,10 +152,11 @@ by eye.
 [references/linters.md](references/linters.md) explains the generic
 layer, reading each tool's output, and common false positives.
 
-**Then read a new document cold.** Reread it as its reader, with only the
-page and its links. Check that the first paragraph orients them, every
-term and "this" is explained on the page, and no session wording or
-stray instruction remains. The questions are in
+**Then read a new or restructured document cold.** Reread it as its
+reader, with only the page and its links. Check that the first paragraph
+orients them, the headings alone carry the message, every term and "this"
+is explained on the page, and no session wording or stray instruction
+remains. The questions are in
 [references/reader-and-purpose.md](references/reader-and-purpose.md#read-it-cold).
 
 ## 5. Fix and judge

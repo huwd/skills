@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- technical-writing 0.3.0: plan a document's message and outline before
+  drafting, keep evidence with the point it supports, inventory facts
+  before restructuring, and keep corrections and small additions
+  proportional.
+
 - commit-messages 0.2.0: disclose the agent's part in commits with an
   `Assisted-by` or `Generated-by` trailer when project rules are silent,
   keep tool-added `Co-Authored-By` and leave `Signed-off-by` to the human.
