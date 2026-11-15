@@ -38,6 +38,22 @@ source of truth. Commit messages are technical writing: their reader needs
 the concrete change, its reason and relevant effects without the authoring
 conversation. Validation claims and issue links require evidence.
 
+## AI disclosure by default
+
+Commits an agent prepares disclose its part. Project rules take precedence,
+including rules that move disclosure to pull requests or ban AI trailers.
+When the project is silent, the agent adds one `Generated-by` or
+`Assisted-by: <tool>:<model>` trailer, naming the tool and model from its
+own context, and keeps any `Co-Authored-By` its tool adds. It never writes
+`Signed-off-by` or runs `git commit -s`: a sign-off certifies a person's
+statement. A project that requires one gets a prepared change, not a commit.
+
+Without this default, a repository with no written policy got no
+disclosure at all, whichever harness made the commit. Applying a trailer is
+not a project policy change, so the skill can do it without editing
+repository configuration. The [reference](../skills/commit-messages/references/ai-disclosure.md)
+records the trade-off over keeping `Co-Authored-By`.
+
 ## Reviewable steps before message formatting
 
 The series is part of the explanation. The agent identifies purposes and
