@@ -56,7 +56,7 @@ These facts drive the structure decision:
 A thin aggregator: a discovery document, a vendored copy of the discovery
 schema, and one CI job that validates the document with ajv. Skills live in
 other repos, each listed as a `git` source. Their README shows the
-layout trap in practice: their dependabot skill sits under `.kiro/skills/` and
+layout trap in practice: their Dependabot skill sits under `.kiro/skills/` and
 isn't discoverable. The aggregator pattern is cheap and worth copying,
 whichever way the monorepo decision goes.
 
@@ -98,7 +98,7 @@ Why:
 1. **CI is the expensive part, and it's the part you want to get right.** A
    detailed pipeline (lint, format, frontmatter validation, SAST, secret scan,
    behavioural evals) replicated across N repos means N copies of rulesets,
-   dependabot config, required-check names, secrets and eval harnesses.
+   Dependabot config, required-check names, secrets and eval harnesses.
    Reusable workflows (`workflow_call`) cut down the YAML but not the
    per-repo setup. In a monorepo it's one pipeline, run as a matrix over the
    changed `skills/*` paths.
@@ -234,7 +234,7 @@ this skill as the example.
       push.
 - [x] Create `huwd/skills` (public), push, then import the `protect_main` and
       `prevent_tag_deletion` rulesets.
-- [x] Import the dependabot config from `huwd/standards` (GitHub Actions
+- [x] Import the Dependabot config from `huwd/standards` (GitHub Actions
       only; there are no package manifests).
 - [x] **Minimum CI**, in `.github/workflows/ci.yml`:
   - [x] frontmatter/spec validation with `skills-ref` (`agentskills validate`)
