@@ -75,6 +75,21 @@ jobs:
         with:
           globs: "**/*.md"
 
+  prose:
+    name: Check prose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Vale, its styles and the en_GB dictionary come from flake.nix, pinned
+      # by flake.lock, so CI and `nix develop` run the same versions.
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+
+      - name: Check prose with Vale (errors fail; warnings are reported)
+        run: .github/scripts/check-prose.sh --minAlertLevel=warning
+
   shell:
     name: Check shell
     runs-on: ubuntu-latest
@@ -182,7 +197,7 @@ jobs:
 
   release:
     name: Release
-    needs: [skills, scan, markdown, shell, tests, secrets, workflows, versions]
+    needs: [skills, scan, markdown, prose, shell, tests, secrets, workflows, versions]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write

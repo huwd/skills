@@ -52,6 +52,10 @@
             "integration_id": 15368
           },
           {
+            "context": "Check prose",
+            "integration_id": 15368
+          },
+          {
             "context": "Check shell",
             "integration_id": 15368
           },
