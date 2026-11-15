@@ -5,6 +5,9 @@ compares the resulting git state with and without the skill, and with the
 `do-release` skill it replaced. The fixtures are synthetic repositories with
 no remote, so no push, registry or GitHub Release is exercised.
 
+The [evaluation report](../../docs/managing-releases-evaluation.md)
+records the completed comparison and its limits.
+
 ## Run the comparison
 
 From the repository root, using Python with PyYAML and a saved Codex login:
