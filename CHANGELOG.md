@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.0]
+
 - technical-writing 0.3.1: the Generic Vale layer accepts acronym plurals
   such as `APIs` with a spelling filter instead of a vocabulary entry,
   which made `Vale.Terms` flag almost every word ending in "s" in
