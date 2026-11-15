@@ -14,7 +14,7 @@ compatibility: >-
   Uses markdownlint-cli2 and Vale when the repository or machine provides
   them. Works without either and reports which checks it skipped.
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Technical Writing
