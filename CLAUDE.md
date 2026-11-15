@@ -14,6 +14,9 @@ current status, and `docs/skill-format.md` for authoring conventions.
   for explicit approval first.
 - This repo is public. Never commit secrets, personal tokens, or private repo
   names.
+- Vale checks the Markdown before push and in CI. Run
+  `.github/scripts/check-prose.sh` before pushing documentation; fix
+  misspellings rather than adding them to the vocabulary.
 
 ## Commit standards and branching
 

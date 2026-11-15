@@ -70,15 +70,25 @@ source. No manual tag push is needed.
 ## Checks
 
 Every pull request runs static checks, none of which call a model: skill
-validation, a static security scan, Markdown and shell linting, secret
-scanning, workflow audits, and [bats](https://github.com/bats-core/bats-core)
-tests for the scripts in `.github/scripts/`. Run the same checks before each commit with
-[pre-commit](https://pre-commit.com/), which needs uv and Go:
+validation, a static security scan, Markdown linting, prose checks with
+[Vale](https://vale.sh/), shell linting, secret scanning, workflow audits,
+and [bats](https://github.com/bats-core/bats-core) tests for the scripts in
+`.github/scripts/`. Run the same checks locally with
+[pre-commit](https://pre-commit.com/): most before each commit, Vale
+before each push. `nix develop` provides every tool they need:
 
 ```bash
-pre-commit install          # once
-pre-commit run --all-files  # every check, by hand
+nix develop                                       # a shell with the tools
+pre-commit install                                # once
+pre-commit run --all-files                        # every commit check
+pre-commit run --all-files --hook-stage pre-push  # Vale
 ```
+
+Vale fails on errors, such as misspellings, and reports warnings as
+advice; `.github/scripts/check-prose.sh --minAlertLevel=suggestion` shows
+all of it. Add project terms to
+`.vale/styles/config/vocabularies/Skills/accept.txt`. See
+[decision 0005](docs/decisions/0005-check-prose-with-vale.md).
 
 Skill behaviour is tested with evals, run locally before merging a change
 to a skill, for example `evals/technical-writing/run.sh`. See
