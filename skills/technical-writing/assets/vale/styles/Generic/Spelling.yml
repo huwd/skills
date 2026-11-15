@@ -4,3 +4,9 @@ message: "'%s' isn't in the British English dictionary or the Generic vocabulary
 level: error
 dictionaries:
   - en_GB
+# Plurals of acronyms, such as APIs. A vocabulary entry would also feed
+# Vale.Terms, which flags every word the pattern matches in any case.
+filters:
+  - '[A-Z]{2,}s'
+  # Possessives, such as "skill's": the en_GB dictionary rejects most of them
+  - "[A-Za-z]+['’]s"

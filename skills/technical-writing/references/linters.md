@@ -88,8 +88,10 @@ Entries are case-sensitive regular expressions:
 - Keep the file's existing order (usually alphabetical) and style.
 
 Vale doesn't flag all-capital acronyms (`JSON`, `CLI`), but it does flag
-their plurals (`APIs`, `UUIDs`). The generic vocabulary accepts those with
-one pattern, `[A-Z]{2,}s`.
+their plurals (`APIs`, `UUIDs`). Accept them with a filter in the spelling
+rule, `filters: ['[A-Z]{2,}s']`, as the generic spelling rule does. Don't
+put a pattern like that in a vocabulary: `Vale.Terms` reads each entry as
+a preferred term and flags every word it matches, in any case.
 
 ### Common false positives
 

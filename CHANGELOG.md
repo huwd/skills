@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- technical-writing 0.3.1: the Generic Vale layer accepts acronym plurals
+  such as `APIs` with a spelling filter instead of a vocabulary entry,
+  which made `Vale.Terms` flag almost every word ending in "s" in
+  repositories that enable the `Vale` style. Its spelling rule also accepts
+  possessives such as "skill's", which the en_GB dictionary rejects.
+
 - technical-writing 0.3.0: plan a document's message and outline before
   drafting, keep evidence with the point it supports, inventory facts
   before restructuring, and keep corrections and small additions
