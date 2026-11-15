@@ -1,10 +1,14 @@
-# The same checks CI runs, before each commit. Set up once with:
+# The same checks CI runs: most before each commit, Vale before each push.
+# Set up once, inside `nix develop`, which provides every tool these need:
 #   pre-commit install
-# Needs uv, jq and shellcheck on PATH, and Go, which pre-commit uses to
-# build skill-validator.
-# Run everything by hand with: pre-commit run --all-files
+# Run everything by hand with:
+#   pre-commit run --all-files
+#   pre-commit run --all-files --hook-stage pre-push
 #
 # Revisions are pinned to commit SHAs, matching .github/workflows/ci.yml.
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
 repos:
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: 341e2a331ba578029e66c2e01183e7a6b5ca9ab4 # frozen: v0.24.0
@@ -58,6 +62,14 @@ repos:
         language: python
         additional_dependencies: [shellcheck-py==0.11.0.1]
         types: [markdown]
+
+      - id: check-prose
+        name: Check prose (Vale)
+        entry: .github/scripts/check-prose.sh
+        language: system
+        files: ^(.*\.md|\.vale\.ini|\.vale/.*|nix/vale\.nix|flake\.(nix|lock)|skills/technical-writing/assets/vale/.*|\.github/scripts/check-prose\.sh)$
+        pass_filenames: false
+        stages: [pre-push]
 
       - id: check-versions
         name: Check versions and changelog
