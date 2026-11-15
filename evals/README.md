@@ -185,6 +185,26 @@ can escape them. Edit/Write counts cannot catch every shell write. Inspect
 traces and artefacts alongside scores; a passing word pattern alone is
 insufficient evidence of correct behaviour.
 
+## Technical-writing editorial cases
+
+Four Codex-only cases check whether the skill helps a document serve its
+reader without rewriting documents that already work. Each case's
+`task.md` names the reader and the task. `editorial_assess.py` checks
+facts, session wording, work orders and the size of a change against
+originals saved outside the model's working directory.
+
+| Case | Input | Expected result |
+| ---- | ----- | --------------- |
+| `editorial-brief` | The authoring brief as first written for PR #27, at `267fa8b` | An oriented brief with no session wording or work orders, keeping every listed fact and source |
+| `editorial-report` | The evaluation report from the same commit | An oriented report keeping the method, results, grader corrections and limits |
+| `coherent-addition` | The rewritten, coherent brief | One short addition; headings and other paragraphs unchanged |
+| `small-correction` | The current report with one wrong run count | Only the corrected sentence changes |
+
+The regex checks cannot judge whether a restructured document helps its
+reader. Score those outputs with the
+[editorial rubric](technical-writing/editorial-rubric.md), reading them
+without knowing which arm produced each one.
+
 ## Run and interpret the suites
 
 From the repository root:
