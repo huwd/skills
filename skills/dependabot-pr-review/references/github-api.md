@@ -12,7 +12,7 @@ Commands marked **write** change GitHub. Run them only after explicit user appro
 git remote get-url origin
 ```
 
-Normalize the result to `OWNER/REPO` before calling the API.
+Normalise the result to `OWNER/REPO` before calling the API.
 
 ## List open Dependabot PRs
 
@@ -148,7 +148,7 @@ curl -fsS "https://api.github.com/repos/<OWNER>/<REPO>/rules/branches/<BASE>" \
 
 ## Merge (write)
 
-`<METHOD>` is `rebase`, `squash`, or `merge`, chosen per Merge Behavior in `SKILL.md`:
+`<METHOD>` is `rebase`, `squash`, or `merge`, chosen per Merge Behaviour in `SKILL.md`:
 
 ```bash
 jq -n "{merge_method: \"<METHOD>\"}" \

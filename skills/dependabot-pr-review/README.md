@@ -36,4 +36,4 @@ Adapted from
 [thoughtbot/dependabot-review-skill-thoughtbot](https://github.com/thoughtbot/dependabot-review-skill-thoughtbot)
 by Jose Blanco and thoughtbot, under the MIT License. It keeps their review
 modes, output and comment formats, and `dependabot-audit:v1` marker, so each
-skill recognizes the other's comments. See [LICENSE](LICENSE).
+skill recognises the other's comments. See [LICENSE](LICENSE).

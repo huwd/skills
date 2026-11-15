@@ -65,7 +65,7 @@ Summary table shape:
 ```
 
 - The verdict and one-line reason sit above the fold, so a teammate can triage without expanding the review.
-- The `dependabot-audit:v1` marker is invisible when rendered and lets a later run find its earlier comment. thoughtbot's dependabot review skill uses the same marker, so each skill recognizes the other's comments.
+- The `dependabot-audit:v1` marker is invisible when rendered and lets a later run find its earlier comment. thoughtbot's Dependabot review skill uses the same marker, so each skill recognises the other's comments.
 - Do not add attribution or a generated-by signature.
 
 ## Confirmation after posting

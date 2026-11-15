@@ -77,7 +77,7 @@ gh api repos/<OWNER/REPO>/rules/branches/<BASE> \
 
 ## Merge (write)
 
-Use `--rebase`, `--squash`, or `--merge`, chosen per Merge Behavior in `SKILL.md`:
+Use `--rebase`, `--squash`, or `--merge`, chosen per Merge Behaviour in `SKILL.md`:
 
 ```bash
 gh pr merge <NUMBER> --repo <OWNER/REPO> --rebase
