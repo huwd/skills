@@ -10,8 +10,8 @@ that read the [Agent Skills](https://agentskills.io/specification) format.
 | [`authoring-skills`](skills/authoring-skills) | Creates or changes skills from concrete workflows and observed failures, then verifies the change |
 | [`reviewing-skills`](skills/reviewing-skills) | Reviews skills without edits and traces failures to the appropriate remedy |
 | [`commit-messages`](skills/commit-messages) | Organises changes into reviewable commits and writes grounded messages while preserving user work |
+| [`managing-releases`](skills/managing-releases) | Records shipped changes under `[Unreleased]`, prepares minimal release pull requests and publishes through the repository's mechanism |
 | [`dependabot-pr-review`](skills/dependabot-pr-review) | Reviews one or all open Dependabot PRs and gives a merge / verify / investigate / hold verdict |
-| [`do-release`](skills/do-release) | Runs a package release workflow |
 | [`technical-writing`](skills/technical-writing) | Writes and edits Markdown to the repository's style guide, and checks it with the repository's linters |
 
 ## Installing
