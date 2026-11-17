@@ -126,6 +126,24 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n")
 
 
+def case_env(env, case, requirements):
+    """Put a suite's trusted stub directories, such as a fake `gh`, first on PATH.
+
+    Entries are relative to the case and must stay inside its suite.
+    """
+    stubs = []
+    for entry in requirements.get("path_prepend", []):
+        path = (case / entry).resolve()
+        if not path.is_relative_to(case.parent.resolve()):
+            raise ValueError(f"path_prepend entry must stay inside the suite: {entry}")
+        if not path.is_dir():
+            raise ValueError(f"path_prepend entry is not a directory: {entry}")
+        stubs.append(str(path))
+    if not stubs:
+        return env
+    return dict(env, PATH=":".join(stubs + [env.get("PATH", "")]))
+
+
 def isolated_config(model, effort, fixture_git=False):
     lines = [f"model = {json.dumps(model)}",
              f"model_reasoning_effort = {json.dumps(effort)}",
@@ -173,6 +191,7 @@ def main():
     suite = root / "evals" / args.suite
     case = suite / args.case
     manifest = case / "codex-case.yaml"
+    requirements = {}
     if manifest.exists():
         requirements = yaml.safe_load(manifest.read_text())
         if requirements.get("requires_fixture_git") and not args.allow_fixture_git:
@@ -227,6 +246,10 @@ def main():
         shutil.copyfile(private / "config.toml", output / "codex-config.toml")
         env = dict(os.environ, CODEX_HOME=str(private), GIT_CONFIG_COUNT="1",
                    GIT_CONFIG_KEY_0="commit.gpgsign", GIT_CONFIG_VALUE_0="false")
+        try:
+            env = case_env(env, case, requirements)
+        except ValueError as exc:
+            parser.error(str(exc))
         for number in range(1, args.runs + 1):
             # Alternate which ref starts each pair, reducing ordering effects.
             order = list(enumerate(snapshots))
