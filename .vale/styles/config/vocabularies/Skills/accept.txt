@@ -1,13 +1,25 @@
 ajv
+Bacchelli
+Baysal
+Biase
 Blanco
+Bosu
+Braz
+Bruntink
 buildctl
+Cao
 check dependabot
 Chippindale
 Codex
+Czerwonka
+D'Ambros
 declarative_laptop
 dependabot-pr-review
 dependabot-review-skill-thoughtbot
+Deursen
+di Biase
 eg
+Fregnan
 GDS
 gh
 (?i)allowlist
@@ -20,6 +32,9 @@ gh
 (?i)cryptographic
 (?i)dep
 (?i)deprecations
+Godfrey
+Greiler
+Guerrouj
 ie
 (?i)evals
 (?i)exfiltration
@@ -28,11 +43,14 @@ ie
 (?i)hardcoding
 (?i)heredoc
 (?i)initializers
+Kemerer
+Kononenko
 (?i)maintainers?
 (?i)multiline
 (?i)namespaced
 (?i)overfitting
 (?i)parsers
+Paulk
 (?i)preflight
 (?i)prerelease
 (?i)rebases
@@ -41,7 +59,9 @@ ie
 (?i)relaxable
 (?i)reproducibly
 (?i)reviewable
+Rigby
 (?i)runbooks?
+Tilford
 (?i)unprefixed
 (?i)unreferenced
 (?i)unrequested
