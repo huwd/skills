@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.4.0]
+
 - authoring-skills 0.1.1, commit-messages 0.2.1 and reviewing-skills 0.1.1:
   remove README notes saying the skill is unreleased; all three are in
   published bundles.
