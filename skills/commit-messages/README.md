@@ -15,11 +15,6 @@ Commits an agent prepares disclose its part with an `Assisted-by` or
 `Generated-by` trailer unless project rules say otherwise. The agent
 never adds a human `Signed-off-by`.
 
-This skill is unreleased. For local development, follow the
-[development symlink instructions](../../docs/skill-format.md#development-symlinks),
-using `commit-messages` as the skill directory name. A later bundle release
-will make it available through agent-manager.
-
 ## Files
 
 - [SKILL.md](SKILL.md): scope, message drafting and requested commit workflow.
@@ -58,4 +53,5 @@ It uses original wording rather than copying either source's text.
 
 ## Changelog
 
+- **0.2.1:** remove the note saying the skill is unreleased.
 - **0.1.0:** first version, covering message drafts and requested commits.

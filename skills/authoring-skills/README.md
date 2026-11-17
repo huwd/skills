@@ -19,10 +19,8 @@ the agreed change within the same task. Review alone produces findings.
 - [references/evaluation.md](references/evaluation.md): behavioural comparisons.
 - [LICENSE](LICENSE): MIT terms, including the upstream copyright notice.
 
-This skill is unreleased. For local development, follow the
-[development symlink instructions](../../docs/skill-format.md#development-symlinks).
-After release, agent-manager will install the whole skill folder from the
-catalogue's versioned bundle. The skill adds no installation adapters.
+Agent-manager installs the whole skill folder from the catalogue's
+versioned bundle. The skill adds no installation adapters.
 Verification uses the target repository's tools; behavioural evaluation
 uses its existing local runner.
 
@@ -38,4 +36,5 @@ authoring and automatic contribution procedure are not imported.
 
 ## Changelog
 
+- **0.1.1:** remove the note saying the skill is unreleased.
 - **0.1.0:** first version, with local creation, repair and no-skill eval cases.

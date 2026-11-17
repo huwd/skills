@@ -357,7 +357,7 @@ to a reviewer instead of preserving every development attempt.
       passed in both arms. Follow-up runs demonstrate the new format default,
       with preserved project overrides and mixed-file series behaviour.
 
-The skill remains under `[Unreleased]`; bundle release preparation is separate.
+The skill was released in v0.2.0.
 
 ### general
 

@@ -20,10 +20,8 @@ and identifies missing requirements rather than inventing them.
   criteria and examples of instruction versus environment failures.
 - [LICENSE](LICENSE): MIT terms, including the upstream copyright notice.
 
-This skill is unreleased. For local development, follow the
-[development symlink instructions](../../docs/skill-format.md#development-symlinks).
-After release, agent-manager will install the whole skill folder from the
-catalogue's versioned bundle.
+Agent-manager installs the whole skill folder from the catalogue's
+versioned bundle.
 
 Static review needs access to the skill and relevant local conventions.
 It does not require running the operational workflow. Behavioural testing
@@ -39,5 +37,6 @@ It adds explicit cause diagnosis and a read-only report boundary.
 
 ## Changelog
 
+- **0.1.1:** remove the note saying the skill is unreleased.
 - **0.1.0:** first version, with review, environment-diagnosis and negative
   trigger eval cases.

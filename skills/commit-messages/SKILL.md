@@ -8,7 +8,7 @@ description: >-
 license: MIT (see LICENSE)
 compatibility: Uses git and the target repository's existing validation tools.
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
   source: Adapted from gitlab-org/ai/skills commit-messages 1.0.3 (MIT, GitLab B.V.).
 ---
 
