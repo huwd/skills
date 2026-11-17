@@ -117,5 +117,35 @@ class GradingTests(unittest.TestCase):
             self.script_grade('print(\'{"passed": "yes"}\')\n')
 
 
+class CasePathTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.case = Path(self.temp.name) / "suite" / "case"
+        (self.case / "stubs").mkdir(parents=True)
+        (self.case.parent / "shared").mkdir()
+
+    def test_case_stubs_precede_inherited_path(self):
+        env = runner.case_env({"PATH": "/usr/bin"}, self.case, {"path_prepend": ["stubs"]})
+        self.assertEqual(env["PATH"], f"{(self.case / 'stubs').resolve()}:/usr/bin")
+
+    def test_suite_level_stubs_are_allowed(self):
+        env = runner.case_env({"PATH": "/usr/bin"}, self.case, {"path_prepend": ["../shared"]})
+        self.assertEqual(env["PATH"], f"{(self.case.parent / 'shared').resolve()}:/usr/bin")
+
+    def test_no_prepend_leaves_path_unchanged(self):
+        env = runner.case_env({"PATH": "/usr/bin"}, self.case, {})
+        self.assertEqual(env["PATH"], "/usr/bin")
+
+    def test_prepend_must_stay_inside_suite(self):
+        (self.case.parents[1] / "elsewhere").mkdir()
+        with self.assertRaisesRegex(ValueError, "inside the suite"):
+            runner.case_env({"PATH": "/usr/bin"}, self.case, {"path_prepend": ["../../elsewhere"]})
+
+    def test_prepend_must_be_an_existing_directory(self):
+        with self.assertRaisesRegex(ValueError, "directory"):
+            runner.case_env({"PATH": "/usr/bin"}, self.case, {"path_prepend": ["missing"]})
+
+
 if __name__ == "__main__":
     unittest.main()
