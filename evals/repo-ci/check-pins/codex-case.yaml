@@ -1,0 +1,6 @@
+name: check-pins
+runner: codex
+skill: repo-ci
+scaffold_script: scaffold.sh
+path_prepend:
+  - ../stubs
