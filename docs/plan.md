@@ -402,6 +402,22 @@ trade-offs and the decision to separate authoring and review.
       catches one baseline command attempt; broader benefit remains unproven.
 - [ ] Try the pair on further real catalogue work, including commit messages.
 
+## Repository CI
+
+Issue [#26](https://github.com/huwd/skills/issues/26) adds `repo-ci`, which
+sets up CI with pins resolved from upstream tags rather than copied. The
+[design note](repo-ci-design.md) records the decisions: the workflow
+dependency lockfile by default, SHA pins for what it does not cover,
+templates in the skill, a verify job shipped to target repositories, and a
+standalone skill that a later repository setup skill can compose.
+
+- [x] Design note, skill, templates and `verify-pins.sh`.
+- [x] Offline eval suite with `gh` and `git` stubs, and the runner's
+      `path_prepend` option.
+- [x] With and without skill comparison, recorded in the
+      [evaluation report](repo-ci-evaluation.md).
+- [ ] Try the skill on a real repository, such as huwd/immurok-nix.
+
 ## Open questions
 
 1. ~~New `huwd/skills` repo or keep skills in `standards`?~~ Decided: new

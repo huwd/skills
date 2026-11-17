@@ -1,0 +1,17 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Reviewed 2026-11-17 against SkillSpector 2.12.0 static mode (--no-llm).
+#
+# A scoped rule, not fingerprints: SKILL.md links scripts/verify-pins.sh
+# twice, and the scan reports the same AE1 finding at each link. The
+# `baseline` command wrote only one fingerprint, and fingerprints break on
+# any edit to SKILL.md. The rule matches only "not completely inspected"
+# findings for that one script; findings inside the script carry other rule
+# IDs and are still reported.
+version: 2
+scanner_version: 2.12.0
+rules:
+- id: AE1
+  path: SKILL.md
+  message: "scripts/verify-pins.sh (partial)"
+  reason: "Scanner limit, not evasion: a static parser span limit stops SkillSpector fully inspecting verify-pins.sh (reason_code static_parse_limit). The script only reads workflow files and makes read-only gh api calls."
+fingerprints: []

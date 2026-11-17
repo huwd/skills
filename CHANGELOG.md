@@ -6,6 +6,12 @@
   remove README notes saying the skill is unreleased; all three are in
   published bundles.
 
+- Add repo-ci 0.1.0: set up GitHub Actions CI with read-only workflows,
+  one job per check, actions locked through `gh actions-lock` to commits
+  resolved from their release tags, a verify job, and Dependabot with a
+  cooldown. Checks existing pins against their tags and reports release
+  dates against the cooldown.
+
 ## [0.3.0]
 
 - technical-writing 0.3.1: the Generic Vale layer accepts acronym plurals

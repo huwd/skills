@@ -1,0 +1,16 @@
+# zizmor's unpinned-uses audit does not read .github/workflows/actions.lock,
+# so it reports every action the lockfile locks by tag. Accept any ref here;
+# the Verify pins workflow covers what zizmor no longer checks:
+#
+# - "Verify lockfile" fails if any action is not locked to a commit that
+#   still verifies upstream.
+# - "Verify SHA pins" fails on a ref that is not a full version tag, such as
+#   @main or @v7, which zizmor's ref-pin policy also accepts.
+#
+# Remove this file if the repository stops using the lockfile.
+
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "*": ref-pin
