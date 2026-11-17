@@ -1,0 +1,44 @@
+# One job per check, so each can become a required status check.
+# Job `name:` values are what rulesets require: keep them stable.
+#
+# No `on: paths:` filters: a required check that never runs blocks the PR.
+#
+# Replace TAG with each action's latest release tag, looked up with
+# `gh api repos/OWNER/REPO/releases/latest`, then run `gh actions-lock`.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@TAG
+        with:
+          persist-credentials: false
+
+      # Set up the project's toolchain, then run its lint command exactly as
+      # contributors run it locally.
+      - run: make lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@TAG
+        with:
+          persist-credentials: false
+
+      - run: make test

@@ -1,0 +1,34 @@
+# Weekly updates with a cooldown: a new release waits COOLDOWN days before
+# Dependabot proposes it, so a compromised or broken release has time to be
+# noticed and pulled. Minor and patch updates arrive as one grouped pull
+# request; majors arrive separately.
+#
+# For actions locked in .github/workflows/actions.lock, Dependabot updates
+# the lockfile in the same pull request as the workflow.
+#
+# Add one entry per package ecosystem the repository uses, with the same
+# schedule, cooldown and grouping. Replace ECOSYSTEM, or delete the entry.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: ECOSYSTEM
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      ECOSYSTEM-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
