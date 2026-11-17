@@ -7,7 +7,7 @@ description: >-
   for creating or changing skills, use authoring-skills when available.
 license: MIT (see LICENSE)
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   source: Informed by gitlab-org/ai/skills authoring-skills (MIT, GitLab B.V.).
 ---
 

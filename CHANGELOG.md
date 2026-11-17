@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- authoring-skills 0.1.1, commit-messages 0.2.1 and reviewing-skills 0.1.1:
+  remove README notes saying the skill is unreleased; all three are in
+  published bundles.
+
 ## [0.3.0]
 
 - technical-writing 0.3.1: the Generic Vale layer accepts acronym plurals
