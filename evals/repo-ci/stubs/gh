@@ -1,0 +1,300 @@
+#!/usr/bin/env python3
+"""Offline stand-in for the GitHub CLI in repo-ci evals.
+
+Answers read-only release, tag and commit queries from upstream.py and
+emulates `gh actions-lock`. Anything that would write to GitHub fails, so a
+run cannot push, open a pull request or change repository settings.
+"""
+
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+from urllib.parse import urlsplit
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import upstream  # noqa: E402
+
+HEX = re.compile(r"[0-9a-f]{40}")
+
+
+def fail(message, code=1):
+    print(message, file=sys.stderr)
+    raise SystemExit(code)
+
+
+def emit(value, jq=None):
+    text = json.dumps(value, indent=2)
+    if jq is None:
+        print(text)
+        return
+    result = subprocess.run(["jq", "-r", jq], input=text, text=True, capture_output=True)
+    sys.stdout.write(result.stdout)
+    sys.stderr.write(result.stderr)
+    raise SystemExit(result.returncode)
+
+
+def release(repo, tag, days):
+    return {"tag_name": tag, "name": tag, "draft": False, "prerelease": False,
+            "published_at": upstream.published(days), "created_at": upstream.published(days),
+            "target_commitish": "main",
+            "html_url": f"https://github.com/{repo}/releases/tag/{tag}"}
+
+
+def known(repo):
+    if repo not in upstream.RELEASES:
+        fail(f"HTTP 404: Not Found (https://api.github.com/repos/{repo})")
+    return upstream.RELEASES[repo]
+
+
+def commit_for(repo, ref):
+    tags = upstream.tags(repo)
+    if ref in tags:
+        return tags[ref]
+    if HEX.fullmatch(ref) and upstream.tag_for(repo, ref):
+        return ref
+    fail(f"HTTP 422: No commit found for SHA: {ref} (https://api.github.com/repos/{repo}/commits/{ref})")
+
+
+def api(args):
+    jq, method, endpoint = None, "GET", None
+    it = iter(args)
+    for arg in it:
+        if arg in ("--jq", "-q"):
+            jq = next(it)
+        elif arg in ("-X", "--method"):
+            method = next(it).upper()
+        elif arg in ("-H", "--header"):
+            next(it)
+        elif arg in ("-f", "-F", "--field", "--raw-field", "--input"):
+            method = "POST" if method == "GET" else method
+            next(it)
+        elif arg.startswith("-"):
+            continue
+        elif endpoint is None:
+            endpoint = arg
+    if method != "GET":
+        fail(f"gh stub: {method} requests are blocked in this sandbox")
+    if not endpoint:
+        fail("gh stub: no endpoint given")
+    path = urlsplit(endpoint).path.strip("/")
+    path = re.sub(r"^https?://api\.github\.com/", "", path)
+    parts = path.split("/")
+    if parts[0] != "repos" or len(parts) < 3:
+        fail(f"gh stub: unsupported endpoint {endpoint}")
+    repo, rest = "/".join(parts[1:3]), parts[3:]
+    releases = known(repo)
+    owner_id, repo_id = upstream.IDS[repo]
+    if not rest:
+        return emit({"full_name": repo, "id": repo_id, "owner": {"login": parts[1], "id": owner_id},
+                     "default_branch": "main", "archived": False}, jq)
+    if rest[0] == "releases":
+        if rest == ["releases"]:
+            return emit([release(repo, t, d) for t, d in reversed(releases)], jq)
+        if rest == ["releases", "latest"]:
+            tag, days = releases[-1]
+            return emit(release(repo, tag, days), jq)
+        if len(rest) == 3 and rest[1] == "tags":
+            for tag, days in releases:
+                if tag == rest[2]:
+                    return emit(release(repo, tag, days), jq)
+        fail(f"HTTP 404: Not Found (https://api.github.com/repos/{path})")
+    if rest == ["tags"]:
+        return emit([{"name": t, "commit": {"sha": s}} for t, s in upstream.tags(repo).items()], jq)
+    if rest[0] == "commits" and len(rest) >= 2:
+        ref = "/".join(rest[1:])
+        commit = commit_for(repo, ref)
+        tag = upstream.tag_for(repo, commit)
+        days = dict(releases)[tag]
+        return emit({"sha": commit, "commit": {"committer": {"date": upstream.published(days)},
+                                               "message": f"Release {tag}"}}, jq)
+    if rest[0] == "git" and len(rest) >= 3 and rest[1] in ("ref", "refs") and rest[2] == "tags":
+        tag = "/".join(rest[3:])
+        if tag not in upstream.tags(repo):
+            fail(f"HTTP 404: Not Found (https://api.github.com/repos/{path})")
+        return emit({"ref": f"refs/tags/{tag}",
+                     "object": {"sha": upstream.tags(repo)[tag], "type": "commit"}}, jq)
+    fail(f"gh stub: unsupported endpoint {endpoint}")
+
+
+def option(args, *names):
+    for index, arg in enumerate(args):
+        if arg in names and index + 1 < len(args):
+            return args[index + 1]
+        for name in names:
+            if arg.startswith(name + "="):
+                return arg.split("=", 1)[1]
+    return None
+
+
+def release_cmd(args):
+    repo = option(args, "-R", "--repo")
+    if not repo:
+        fail("gh stub: pass --repo OWNER/REPO; this sandbox has no remote")
+    releases = known(repo)
+    jq = option(args, "--jq", "-q")
+    fields = option(args, "--json")
+    if args[0] == "list":
+        rows = [release(repo, t, d) for t, d in reversed(releases)]
+        if fields:
+            mapped = [{"tagName": r["tag_name"], "name": r["name"], "publishedAt": r["published_at"],
+                       "isLatest": r["tag_name"] == releases[-1][0], "isPrerelease": False, "isDraft": False}
+                      for r in rows]
+            return emit(mapped, jq)
+        for r in rows:
+            label = "Latest" if r["tag_name"] == releases[-1][0] else ""
+            print(f"{r['name']}\t{label}\t{r['tag_name']}\t{r['published_at']}")
+        return
+    if args[0] == "view":
+        tag = next((a for a in args[1:] if not a.startswith("-") and a not in (repo, jq, fields)),
+                   releases[-1][0])
+        for t, d in releases:
+            if t == tag:
+                r = release(repo, t, d)
+                if fields:
+                    return emit({"tagName": t, "name": t, "publishedAt": r["published_at"],
+                                 "targetCommitish": "main", "url": r["html_url"]}, jq)
+                print(f"title:\t{t}\ntag:\t{t}\npublished:\t{r['published_at']}\nurl:\t{r['html_url']}")
+                return
+        fail("release not found")
+    fail(f"gh stub: unsupported release command {args[0]}")
+
+
+USES = re.compile(r"^(?P<lead>\s*-?\s*uses:\s*)(?P<target>[^\s#'\"]+)(?P<rest>.*)$")
+
+
+def scan(workflows):
+    """Step-level remote `uses:` per workflow; reusable workflow calls are not locked."""
+    found = {}
+    for path in workflows:
+        for line in path.read_text().splitlines():
+            match = USES.match(line)
+            if not match:
+                continue
+            target = match["target"].strip("'\"")
+            if target.startswith(("./", "docker://", "$/")) or "@" not in target:
+                continue
+            name, ref = target.rsplit("@", 1)
+            if "/.github/workflows/" in name:
+                continue
+            found.setdefault(str(path), []).append((name, ref))
+    return found
+
+
+def lock_entries(found):
+    errors, deps = [], {}
+    for uses in found.values():
+        for name, ref in uses:
+            repo = "/".join(name.split("/")[:2])
+            if repo not in upstream.RELEASES:
+                errors.append(f"error: {name}@{ref}: repository not found")
+                continue
+            commit = upstream.tags(repo).get(ref) or (ref if upstream.tag_for(repo, ref) else None)
+            if commit is None:
+                errors.append(f"error: {name}@{ref}: ref does not resolve upstream (impostor or moved commit)")
+                continue
+            owner_id, repo_id = upstream.IDS[repo]
+            deps[f"{name}@{ref}"] = {"ref": ref, "commit": f"sha1-{commit}",
+                                     "owner_id": owner_id, "repo_id": repo_id}
+    return errors, deps
+
+
+def render(found, deps):
+    lines = ["# This file is machine-generated by `gh actions-lock`.",
+             "# Do not edit by hand; run `gh actions-lock` to update.",
+             "# Docs: https://gh.io/actions-lockfile", "version: 'v0.0.3'", "workflows:"]
+    for path in sorted(found):
+        lines.append(f"    '{path}':")
+        lines += [f"        - '{n}@{r}'" for n, r in sorted(set(found[path]))]
+    lines.append("dependencies:")
+    for key in sorted(deps):
+        lines.append(f"    '{key}':")
+        lines += [f"        {k}: {json.dumps(v) if isinstance(v, int) else repr(v)}" for k, v in deps[key].items()]
+    return "\n".join(lines) + "\n"
+
+
+def narrow(workflows):
+    """Rewrite floating major tags (`@v7`) to the full tag they resolve to."""
+    for path in workflows:
+        out = []
+        for line in path.read_text().splitlines(keepends=True):
+            match = USES.match(line.rstrip("\n"))
+            if match and "@" in match["target"]:
+                name, ref = match["target"].rsplit("@", 1)
+                repo = "/".join(name.split("/")[:2])
+                if repo in upstream.RELEASES and re.fullmatch(r"v\d+", ref):
+                    full = upstream.tag_for(repo, upstream.tags(repo)[ref])
+                    line = f"{match['lead']}{name}@{full}{match['rest']}\n"
+            out.append(line)
+        path.write_text("".join(out))
+
+
+def actions_lock(args):
+    if "--help" in args or "-h" in args:
+        print("Usage: gh actions-lock [<workflow-path>...] [--verify | --verify-local | --no-fix | --relock]\n"
+              "Pins every action your workflows use and writes .github/workflows/actions.lock.")
+        return
+    if "--version" in args:
+        print("gh-actions-lock v0.4.1")
+        return
+    root = Path.cwd()
+    directory = root / ".github/workflows"
+    workflows = sorted(p for p in directory.glob("*.y*ml")) if directory.is_dir() else []
+    if not workflows:
+        fail("error: no workflows found in .github/workflows")
+    lockfile = directory / "actions.lock"
+    read_only = any(a in args for a in ("--verify", "--verify-local", "--no-fix"))
+    if not read_only:
+        narrow(workflows)
+    found = {str(Path(p).relative_to(root)): v for p, v in scan(workflows).items()}
+    errors, deps = lock_entries(found)
+    for error in errors:
+        print(error, file=sys.stderr)
+    expected = render(found, deps)
+    if read_only:
+        current = lockfile.read_text() if lockfile.exists() else ""
+        if "--verify-local" in args:
+            missing = [k for k in deps if f"'{k}':" not in current]
+            if missing:
+                fail("error: lockfile missing pin for " + ", ".join(missing))
+            print("ok: every uses: has a lockfile entry")
+            return
+        if errors or current != expected:
+            fail("error: .github/workflows/actions.lock is stale or does not verify; run `gh actions-lock`")
+        print("ok: lockfile verified")
+        return
+    if errors:
+        raise SystemExit(1)
+    lockfile.write_text(expected)
+    print(f"wrote {lockfile.relative_to(root)} ({len(deps)} dependencies)")
+
+
+def main(argv):
+    if not argv:
+        fail("gh stub: no command")
+    command, args = argv[0], argv[1:]
+    if command == "api":
+        return api(args)
+    if command == "release" and args:
+        return release_cmd(args)
+    if command == "actions-lock":
+        return actions_lock(args)
+    if command == "auth" and args[:1] == ["status"]:
+        print("github.com\n  ✓ Logged in to github.com account eval-user (stub)")
+        return
+    if command == "extension":
+        if args[:1] == ["list"]:
+            print("gh actions-lock\tgithub/gh-actions-lock\tv0.4.1")
+            return
+        if args[:1] in (["install"], ["upgrade"]):
+            print("extension github/gh-actions-lock is already installed (v0.4.1)")
+            return
+    if command in ("--version", "version"):
+        print("gh version 2.83.0 (stub)")
+        return
+    fail(f"gh stub: '{' '.join(argv)}' is not available in this sandbox (no network, no writes)")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

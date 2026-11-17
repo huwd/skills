@@ -56,8 +56,9 @@ graders outside Claude's `case.yaml`/`prompt.md` discovery. The
 [commit-messages suite](commit-messages/README.md) uses this format.
 
 A case's `codex-case.yaml` can list `path_prepend` directories, relative to
-the case and inside its suite, to put first on the agent's `PATH`, such
-as an offline `gh` stub. Stubs run as the caller, like scaffolds.
+the case and inside its suite, to put first on the agent's `PATH`. The
+[repo-ci suite](repo-ci/README.md) uses this for an offline `gh` stub.
+Stubs run as the caller, like scaffolds.
 
 For cases that must create fixture commits, `--allow-fixture-git` selects
 a profile extending Codex's workspace permissions with write access to the

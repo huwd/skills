@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""Answer `git ls-remote` for GitHub repositories from upstream.py.
+
+Resolving a tag with `git ls-remote` is a reasonable alternative to the
+API, so the offline evals support it. Every other git command runs the
+real git found later on PATH.
+"""
+
+import os
+from pathlib import Path
+import re
+import shutil
+import sys
+
+here = Path(__file__).resolve().parent
+sys.path.insert(0, str(here.parent))
+import upstream  # noqa: E402
+
+
+def real_git():
+    rest = [d for d in os.environ.get("PATH", "").split(os.pathsep) if d and Path(d).resolve() != here]
+    found = shutil.which("git", path=os.pathsep.join(rest))
+    if not found:
+        sys.exit("git stub: no real git on PATH")
+    return found
+
+
+args = sys.argv[1:]
+if args[:1] == ["ls-remote"]:
+    positional = [a for a in args[1:] if not a.startswith("-")]
+    match = re.match(r"(?:https://github\.com/|git@github\.com:)([^/]+/[^/]+?)(?:\.git)?/?$",
+                     positional[0]) if positional else None
+    if match:
+        repo = match[1]
+        if repo not in upstream.RELEASES:
+            sys.exit(f"remote: Repository not found.\nfatal: repository '{positional[0]}' not found")
+        patterns = positional[1:]
+        refs = {f"refs/tags/{tag}": commit for tag, commit in upstream.tags(repo).items()}
+        refs["HEAD"] = refs["refs/heads/main"] = upstream.sha(repo, upstream.latest(repo))
+        for ref, commit in sorted(refs.items()):
+            # git matches a pattern against the ref's trailing path components
+            if not patterns or any(ref == p or ref.endswith("/" + p) for p in patterns):
+                print(f"{commit}\t{ref}")
+        sys.exit(0)
+os.execv(real_git(), ["git", *args])
