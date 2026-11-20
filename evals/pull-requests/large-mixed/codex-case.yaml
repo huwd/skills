@@ -1,0 +1,4 @@
+name: large-mixed
+runner: codex
+skill: pull-requests
+scaffold_script: scaffold.sh
