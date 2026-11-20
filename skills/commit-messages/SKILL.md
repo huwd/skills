@@ -8,7 +8,7 @@ description: >-
 license: MIT (see LICENSE)
 compatibility: Uses git and the target repository's existing validation tools.
 metadata:
-  version: "0.2.1"
+  version: "0.2.2"
   source: Adapted from gitlab-org/ai/skills commit-messages 1.0.3 (MIT, GitLab B.V.).
 ---
 
@@ -86,7 +86,11 @@ Before staging a mixed change, identify its distinct purposes and their
 dependencies. Propose the commits in the order a reviewer should read them,
 with the change and reason for each, included paths or hunks, and relevant
 checks. A series should reduce the amount the reviewer has to understand
-at once, rather than reproduce the order of editing sessions.
+at once, rather than reproduce the order of editing sessions. A reviewer
+usually sees a pull request's whole diff together, so a well-ordered
+series can still be too big to review. When the series is headed for a
+pull request, use pull-requests, when available, to check its size and
+write the description.
 
 Prefer the smallest complete step that makes sense independently. Keep a
 fix with its regression test and relevant documentation. Separate mechanical
