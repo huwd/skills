@@ -1,0 +1,4 @@
+name: explain-branch
+runner: codex
+skill: pull-requests
+scaffold_script: scaffold.sh
