@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- commit-messages 0.2.2: point a series headed for a pull request to
+  pull-requests, which checks its size and writes the description.
+
 - Add pull-requests 0.1.0: estimate review time for a branch from the
   lines that need judgement, recommend splitting a branch too big for one
   review, and write a description with a reading guide that separates
