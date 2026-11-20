@@ -1,0 +1,6 @@
+name: go-generated
+runner: codex
+skill: pull-requests
+scaffold_script: scaffold.sh
+path_prepend:
+  - ../stubs

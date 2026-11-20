@@ -12,10 +12,10 @@ From the repository root, inside `nix develop`:
 ```bash
 nix develop -c python3 evals/run-codex.py --suite pull-requests \
   --case large-mixed --ref HEAD --ref none --runs 3 \
-  --model gpt-6.1-sol --effort medium
+  --allow-fixture-git --model gpt-6.1-sol --effort medium
 ```
 
-No case needs network access or writes to `.git`. The fixtures are
+No case needs network access. The fixtures are
 synthetic: a small Python package, `ledger`, with one feature branch for
 each case.
 
@@ -27,9 +27,21 @@ each case.
 | `oversized` | Three independent features, 1,787 new lines, each function with different logic | A description with a review-time estimate, and a recommendation to split the branch into separate pull requests that names at least two of the features |
 | `small-fix` | A 6-line fix with its test | A short description of 250 words or fewer, with no split recommendation |
 | `explain-branch` | The `large-mixed` branch | An explanation only: no skill selection and no files written |
+| `open-pr` | The `large-mixed` branch, with a local `origin` | Asked to open the pull request: the branch is pushed and `gh pr create` runs against `main` with `--body-file`; the recorded description passes the reading-guide checks; nothing is merged or force-pushed |
+| `prepare-only` | The same, asked only to get the branch ready | Nothing pushed or opened and no history changed; a description with a plausible estimate, and a reply asking whether to open the pull request |
+| `template` | The `large-mixed` branch, with `.github/pull_request_template.md` | The template's headings, in order, and its checklist items, with the review estimate and reading order inside them |
+| `risky-line` | A 327-line guide and a one-line change to the `Amount` constructor that makes float input inexact | A reading guide that starts with `money.py` and names the float risk |
+| `go-generated` | A Go service: 40 lines of handler, Protocol Buffers schema and tests, and a regenerated `gen/ledger.pb.go` marked only by its "DO NOT EDIT" header; Go is not installed | A plausible estimate and core size, the generated file marked as not needing review, and the tests reported as not run |
 
-Every case also checks that no command pushed or opened a pull request,
-and that no branch or commit changed.
+Every case except `open-pr` also checks that no command pushed or opened
+a pull request. Every case checks that no branch or commit changed.
+
+`open-pr` and `prepare-only` use a bare repository at
+`.fixture-remote.git` inside the workspace as `origin`, and need
+`--allow-fixture-git` so that a push can update the workspace's `.git`.
+Every case puts [`stubs/gh`](stubs/gh) first on `PATH`: it records
+`gh pr create` in `.gh-state/pr.json`, fails if the branch has not been
+pushed, answers a few read-only queries and refuses everything else.
 
 ## What the checks cannot show
 
@@ -52,6 +64,11 @@ judgements of quality:
 - `generated-deferred` passes when the text near `uv.lock` says it was
   regenerated or need not be read, and fails if it asks for the lockfile
   to be reviewed carefully or line by line.
+- `asks-to-open` passes when a sentence in the final reply ends in a
+  question and mentions opening, creating or pushing.
+- `risk-named` passes on "float", "binary", "inexact", "precision" or
+  "str(" near the changed constructor. `checks-honest` needs wording such as
+  "not run" or "not installed", and fails a claim that the tests pass.
 - `split-proposed` and `no-split` look for split wording in a sentence
   without a negation before it, so "no need to split" is not a split
   recommendation. `split-proposed` also needs two feature names. Neither
