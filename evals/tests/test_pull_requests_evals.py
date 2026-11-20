@@ -93,6 +93,47 @@ class DescriptionControls(unittest.TestCase):
                    "2. Skip `uv.lock`: regenerated with `uv lock --upgrade`.\n")
         self.assertTrue(assessor.assess(self.root, "core-first", []))
 
+    def check_text(self, case, check, text):
+        self.root = Path(tempfile.mkdtemp(dir=self.temp.name)) / "workspace"
+        self.build(case, text + "\n\n" + "Context sentence for the reader. " * 10)
+        return bool(assessor.assess(self.root, check, []))
+
+    def test_implausible_estimate_fails_large_mixed(self):
+        # 58 core lines at 200 to 400 lines an hour is minutes, not hours.
+        self.assertFalse(self.check_text("large-mixed", "review-estimate",
+                                         "Allow about 4 hours to review `src/ledger/rounding.py`."))
+
+    def test_estimate_in_hours_and_minutes_passes_oversized(self):
+        self.assertTrue(self.check_text("oversized", "review-estimate",
+                                        "| Total | 6 | +1,787 | 5h 57m (4h 28m–8h 56m) to review |"))
+
+    def test_total_in_review_table_passes_oversized(self):
+        table = ("| Part | Files | Lines | Review time |\n| --- | --- | --- | --- |\n"
+                 + "".join(f"| Feature {n} | 2 | +596 | 2.0 hours (1.5–3.0) |\n" for n in range(1, 4))
+                 + "| Total | 6 | +1,787 | 6.0 hours (4.5–8.9) |\n")
+        self.assertTrue(self.check_text("oversized", "review-estimate", table))
+
+    def test_estimate_in_minutes_fails_oversized(self):
+        self.assertFalse(self.check_text("oversized", "review-estimate", "About 20 minutes to review."))
+
+    def test_coincidental_number_fails_core_size(self):
+        self.assertFalse(self.check_text("large-mixed", "core-size",
+                                         "Bumps 400 packages; 58 files reformatted. Review `rounding.py`."))
+
+    def test_reviewing_the_lockfile_fails_generated_deferred(self):
+        self.assertFalse(self.check_text("large-mixed", "generated-deferred",
+                                         "Please review uv.lock carefully, line by line; CI does not check it."))
+        self.assertFalse(self.check_text("large-mixed", "generated-deferred",
+                                         "uv.lock was regenerated; please review it carefully, line by line."))
+
+    def test_declined_split_fails_split_proposed(self):
+        self.assertFalse(self.check_text("oversized", "split-proposed",
+                                         "Adds CSV export, FX and audit. There is no need to split this into separate PRs."))
+
+    def test_declining_a_split_passes_no_split(self):
+        self.assertTrue(self.check_text("small-fix", "no-split",
+                                        "Fixes `tax_largest` in `tax.py`. No need to split this."))
+
     def test_missing_description_fails(self):
         self.build("large-mixed")
         self.assertFalse(assessor.assess(self.root, "body-written", []))
