@@ -1,7 +1,8 @@
 # Evaluation of the pull-requests skill
 
-This report is for contributors deciding whether `pull-requests` 0.1.0
-improves pull request descriptions enough to merge. It compares the skill
+This report is for contributors deciding whether `pull-requests`
+improves pull request descriptions enough to merge. It covers 0.1.0 and
+the 0.1.1 fix found by the [later cases](#later-cases-and-011). It compares the skill
 with no skill on the same offline fixtures. The
 [research note](code-review-size-research.md) records the review budget
 the skill applies, and the [eval suite](../evals/pull-requests/README.md)
@@ -98,6 +99,37 @@ three runs, scoring 0.89, and the current version passes. The extra check
 moved the baseline's `large-mixed` score from 0.38 to 0.44. Re-scoring
 every saved run with the stricter checks changed no other result.
 
+## Later cases and 0.1.1
+
+Five cases were added after 0.1.0 merged, to cover opening a pull
+request, preparing one without opening it, a repository template, a
+risky one-line change and a Go service with generated code. They ran
+three times per arm against 0.1.0 on 20 November 2026.
+
+| Case | 0.1.0 | Without skill |
+| ---- | ----- | ------------- |
+| `open-pr` | 1.00, 1.00, 1.00 | 0.62, 0.62, 0.62 |
+| `prepare-only` | 0.80, 0.80, 0.80 | 0.40, 0.40, 0.40 |
+| `template` | 1.00, 1.00, 1.00 | 0.67, 0.67, 0.67 |
+| `risky-line` | 1.00, 1.00, 1.00 | 0.83, 0.83, 0.83 |
+| `go-generated` | 1.00, 1.00, 1.00 | 0.57, 0.57, 0.43 |
+
+Without the skill, agents opened pull requests and kept template
+headings, but gave no estimate or reading order. Asked to get a branch
+ready, every baseline run committed new tests unasked and left the
+description in `.git`. In `risky-line`, the baseline described the float
+risk but put the guide first in its reading order. In `go-generated`, it
+did not mark the generated `.pb.go` file, and one run said tests passed
+that had not run.
+
+With 0.1.0, `prepare-only` wrote the description to `/tmp` and ended
+without offering to open the pull request. Version 0.1.1 leaves the
+description in the reply or a named file and asks before pushing or
+opening. Against 0.1.0, it scored 1.00 in all three runs, where 0.1.0
+scored 0.80, 0.80 and 0.60. Two runs each of `large-mixed`, `open-pr` and
+`small-fix` with 0.1.1 all scored 1.00. Its replies sometimes cite the
+skill file's path, which a user does not need.
+
 ## Limits
 
 - The description checks are patterns. `review-estimate` checks that an
@@ -105,8 +137,8 @@ every saved run with the stricter checks changed no other result.
   `split-proposed` does not judge the proposed groups. The descriptions
   were read by hand for this report.
 - Three runs per arm on one model is a small sample.
-- The fixtures are synthetic Python, without a pull request template, a
-  remote or an existing pull request. Opening a pull request, and asking
-  for approval first, are not tested.
+- The fixtures are synthetic. The remote is a local bare repository and
+  `gh` is a stub, so a real pull request page, reviewers and an existing
+  pull request are not tested.
 - The review budget itself rests on the evidence and limits in the
   research note.
