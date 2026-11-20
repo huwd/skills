@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.0]
+
 - commit-messages 0.2.2: point a series headed for a pull request to
   pull-requests, which checks its size and writes the description.
 
