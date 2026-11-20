@@ -10,7 +10,7 @@ description: >-
   judge whether a branch is too big to review. Explaining what a branch
   does is not this workflow.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Pull requests for human review
@@ -107,3 +107,8 @@ running `gh pr create`, editing an existing pull request and requesting
 reviewers are outward-facing: show the description and ask before doing
 them, unless the user has already asked for that action. Pass the body
 with `--body-file` rather than on the command line.
+
+When the user asked to prepare a pull request but not to open it, put the
+description where they will find it: the file they named, or the reply.
+Do not leave it only in a temporary directory or inside `.git`. End by
+saying what you would push and open, and ask whether to go ahead.
