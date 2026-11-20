@@ -87,6 +87,12 @@ class DescriptionControls(unittest.TestCase):
             self.assertFalse(result[name], name)
         self.assertTrue(result["no-outward"])
 
+    def test_summary_naming_lockfile_first_still_passes_core_first(self):
+        self.build("large-mixed", "# Rounding\n\nAlso refreshes `uv.lock` and renames Amount.\n\n"
+                   "## How to review\n\n1. Start with `src/ledger/rounding.py`.\n"
+                   "2. Skip `uv.lock`: regenerated with `uv lock --upgrade`.\n")
+        self.assertTrue(assessor.assess(self.root, "core-first", []))
+
     def test_missing_description_fails(self):
         self.build("large-mixed")
         self.assertFalse(assessor.assess(self.root, "body-written", []))
@@ -106,6 +112,8 @@ class DescriptionControls(unittest.TestCase):
                    + "\n\nReview time: about 5 hours.\n")
         events = [{"type": "item.completed", "item": {"type": "agent_message",
                                                       "text": "Consider separate PRs for the CSV export and audit log."}}]
+        self.assertTrue(assessor.assess(self.root, "split-proposed", events))
+        events[0]["item"]["text"] = "Recommend splitting before opening: CSV export, FX and audit."
         self.assertTrue(assessor.assess(self.root, "split-proposed", events))
 
     def test_description_without_split_fails_oversized(self):

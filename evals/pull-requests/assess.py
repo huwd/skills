@@ -22,7 +22,7 @@ CASE_CHECKS = {
 BODY = "PR_BODY.md"
 DURATION = re.compile(r"\b\d+(?:\.\d+)?\s*(?:[-–]|to)?\s*(?:\d+(?:\.\d+)?\s*)?"
                       r"(?:min(?:ute)?s?|hours?|hrs?|h)\b", re.I)
-SPLIT = re.compile(r"\bsplit\b|\bseparate\s+(?:pull\s+requests|PRs)\b|\b(?:two|three|several|multiple)\s+"
+SPLIT = re.compile(r"\bsplit(?:s|ting)?\b|\bseparate\s+(?:pull\s+requests|PRs)\b|\b(?:two|three|several|multiple)\s+"
                    r"(?:smaller\s+)?(?:pull\s+requests|PRs)\b|\bstack(?:ed)?\s+(?:of\s+)?(?:pull\s+requests|PRs)\b",
                    re.I)
 FEATURES = [r"csv|export", r"\bfx\b|currenc|conver", r"audit"]
@@ -102,10 +102,12 @@ def assess(root, check, events):
         targets = {core["added"], core["added"] + core["deleted"]}
         return any(0.65 * target <= n <= 1.35 * target for n in numbers(text) for target in targets)
     if check == "core-first":
-        # Table rows summarise sizes; the reading order is in the prose and lists.
-        prose = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("|"))
-        core = first(prose, [r"rounding\.py", r"invoice\.py", r"test_rounding\.py"])
-        mechanical = first(prose, [r"uv\.lock"])
+        # The reading order is in the description's list items; a summary
+        # paragraph or size table may name the parts in any order.
+        items = "\n".join(re.findall(r"^[ \t]*(?:\d+[.)]|[-*])[ \t].*(?:\n(?![ \t]*\n)(?![ \t]*(?:\d+[.)]|[-*])[ \t]).*)*",
+                                     text, re.M))
+        core = first(items, [r"rounding\.py", r"invoice\.py", r"test_rounding\.py"])
+        mechanical = first(items, [r"uv\.lock"])
         return core is not None and (mechanical is None or core < mechanical)
     if check == "mechanical-verification":
         return bool(re.search(r"sed\s+-i|--word-diff|--color-moved|ignore-all-space|git\s+diff\b[^\n]*\s-w\b"
