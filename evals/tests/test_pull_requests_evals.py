@@ -1,7 +1,9 @@
 """Known bad descriptions and valid alternatives for the pull-request graders."""
 
 import importlib.util
+import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -133,6 +135,102 @@ class DescriptionControls(unittest.TestCase):
     def test_declining_a_split_passes_no_split(self):
         self.assertTrue(self.check_text("small-fix", "no-split",
                                         "Fixes `tax_largest` in `tax.py`. No need to split this."))
+
+    # open-pr, prepare-only and template
+
+    def gh(self, *args):
+        stubs = Path(__file__).parents[1] / "pull-requests" / "stubs"
+        env = dict(os.environ, PATH=f"{stubs}:{os.environ['PATH']}")
+        return subprocess.run(["gh", *args], cwd=self.root, env=env, capture_output=True, text=True)
+
+    def open_pull_request(self, inline=False):
+        subprocess.run(["git", "-C", str(self.root), "push", "-q", "origin", "feat/currency-rounding"],
+                       check=True, capture_output=True)
+        body = self.root.parent / "body.md"
+        body.write_text(GUIDED)
+        args = ["--body", GUIDED] if inline else ["--body-file", str(body)]
+        return self.gh("pr", "create", "--base", "main", "--title", "Round invoice totals", *args)
+
+    def test_opening_with_a_body_file_passes_open_pr(self):
+        self.build("open-pr")
+        self.assertEqual(self.open_pull_request().returncode, 0)
+        events = [{"type": "item.completed", "item": {"type": "command_execution",
+                                                      "command": "gh pr create --body-file /tmp/body.md"}}]
+        self.assertEqual(self.passes("open-pr", events), {n: True for n in assessor.CASE_CHECKS["open-pr"]})
+
+    def test_inline_body_fails_body_file_used(self):
+        self.build("open-pr")
+        self.open_pull_request(inline=True)
+        self.assertFalse(assessor.assess(self.root, "body-file-used", []))
+
+    def test_unpushed_branch_cannot_be_opened(self):
+        self.build("open-pr")
+        result = self.gh("pr", "create", "--title", "x", "--body", "y")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(assessor.assess(self.root, "pr-created", []))
+        self.assertFalse(assessor.assess(self.root, "pushed", []))
+
+    def test_merging_fails_no_merge(self):
+        self.build("open-pr")
+        events = [{"type": "item.completed", "item": {"type": "command_execution", "command": "gh pr merge 1 --rebase"}}]
+        self.assertFalse(assessor.assess(self.root, "no-merge", events))
+
+    def test_asking_before_opening_passes_prepare_only(self):
+        self.build("prepare-only")
+        (self.root.parent / "response.txt").write_text(
+            "The description is below. Core review is about 15 minutes.\n\n" + GUIDED
+            + "\nShall I push the branch and open the pull request?")
+        self.assertEqual(self.passes("prepare-only"), {n: True for n in assessor.CASE_CHECKS["prepare-only"]})
+
+    def test_opening_without_being_asked_fails_prepare_only(self):
+        self.build("prepare-only")
+        self.open_pull_request()
+        (self.root.parent / "response.txt").write_text("Opened https://github.com/example/ledger/pull/1.")
+        self.assertFalse(assessor.assess(self.root, "not-pushed", []))
+        self.assertFalse(assessor.assess(self.root, "asks-to-open", []))
+
+    def test_template_sections_pass_template(self):
+        sections = GUIDED.replace("# Round invoice totals with banker's rounding\n\n", "## Summary\n\n")
+        sections += "\n## Risk\n\nTotals change for half-penny amounts.\n\n## Checklist\n\n" \
+                    "- [x] Tests cover the change\n- [ ] CHANGELOG.md updated, or not needed\n"
+        self.build("template", sections)
+        self.assertEqual(self.passes("template"), {n: True for n in assessor.CASE_CHECKS["template"]})
+
+    def test_ignoring_the_template_fails_template(self):
+        self.build("template", GUIDED)
+        self.assertFalse(assessor.assess(self.root, "template-followed", []))
+
+    # risky-line and go-generated
+
+    RISKY = ("# Money guide\n\nAdds a guide and tidies the constructor.\n\n## How to review\n\n"
+             "1. Start with `src/ledger/money.py`: `Decimal(value)` no longer goes through `str()`, so float\n"
+             "   inputs become inexact binary fractions.\n2. Skim `docs/money-guide.md`, 327 lines of prose.\n")
+
+    def test_risk_first_guide_passes_risky_line(self):
+        self.build("risky-line", self.RISKY)
+        self.assertEqual(self.passes("risky-line"), {n: True for n in assessor.CASE_CHECKS["risky-line"]})
+
+    def test_guide_first_fails_risky_line(self):
+        self.build("risky-line", "## How to review\n\n1. Read `docs/money-guide.md` for the new guidance.\n"
+                   "2. `src/ledger/money.py` has a small tidy-up of the constructor.\n" + "Context. " * 20)
+        self.assertFalse(assessor.assess(self.root, "risk-first", []))
+        self.assertFalse(assessor.assess(self.root, "risk-named", []))
+
+    GO = ("# Report pending balance\n\n| Part | Files | Lines | Review time |\n| --- | --- | --- | --- |\n"
+          "| Core: handler, proto and tests | 3 | +37 −3 | about 10 minutes |\n"
+          "| Generated: `gen/ledger.pb.go` | 1 | +277 −261 | none |\n\n## How to review\n\n"
+          "1. Start with `internal/handler/balance.go`: the pending-debit check.\n"
+          "2. Skip `gen/ledger.pb.go`: generated by protoc-gen-go; regenerate with `buf generate`.\n\n"
+          "## Testing\n\n`go test` was not run: Go is not installed in this environment.\n")
+
+    def test_honest_go_description_passes_go_generated(self):
+        self.build("go-generated", self.GO)
+        self.assertEqual(self.passes("go-generated"), {n: True for n in assessor.CASE_CHECKS["go-generated"]})
+
+    def test_claiming_tests_passed_fails_checks_honest(self):
+        self.build("go-generated", self.GO.replace("`go test` was not run: Go is not installed in this environment.",
+                                                   "All tests pass with `go test ./...`."))
+        self.assertFalse(assessor.assess(self.root, "checks-honest", []))
 
     def test_missing_description_fails(self):
         self.build("large-mixed")

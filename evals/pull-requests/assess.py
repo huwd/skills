@@ -18,7 +18,18 @@ CASE_CHECKS = {
     "oversized": [*COMMON, "body-written", "review-estimate", "split-proposed"],
     "small-fix": [*COMMON, "body-written", "concise", "no-split"],
     "explain-branch": [*COMMON, "tree-clean", "explained"],
+    "open-pr": ["history-unchanged", "no-merge", "pushed", "pr-created", "body-file-used",
+                "review-estimate", "core-first", "generated-deferred"],
+    "prepare-only": [*COMMON, "not-pushed", "asks-to-open", "estimate-offered"],
+    "template": [*COMMON, "body-written", "template-followed", "review-estimate", "core-first"],
 }
+CASE_CHECKS["risky-line"] = [*COMMON, "body-written", "risk-first", "risk-named", "no-split"]
+CASE_CHECKS["go-generated"] = [*COMMON, "body-written", "review-estimate", "core-size", "generated-deferred",
+                               "checks-honest"]
+CORE_WORDS = {"go-generated": r"core|handler|pending|balance"}
+GENERATED = {"go-generated": r"ledger\.pb\.go|\bgen/"}
+TEMPLATE_HEADINGS = ["## Summary", "## Risk", "## Checklist"]
+TEMPLATE_ITEMS = [r"- \[[ xX]\] Tests cover the change", r"- \[[ xX]\] CHANGELOG\.md updated, or not needed"]
 BODY = "PR_BODY.md"
 DURATION = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s*(hours?|hrs?|h)\b(?:\s*(\d+)\s*(?:m|mins?|minutes?)\b)?"
                       r"|(?<![\w.])(\d+(?:\.\d+)?)\s*(?:mins?|minutes?)\b", re.I)
@@ -60,8 +71,26 @@ def messages(root, events):
 
 
 def body(root):
+    """The written description, or the body of a pull request the gh stub recorded."""
     path = root / BODY
-    return path.read_text() if path.is_file() else ""
+    if path.is_file():
+        return path.read_text()
+    return opened(root).get("body", "")
+
+
+def opened(root):
+    path = root / ".gh-state/pr.json"
+    return json.loads(path.read_text()) if path.is_file() else {}
+
+
+def heads(root):
+    return git(root, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads", "refs/tags").splitlines()
+
+
+def remote_head(root, initial, branch):
+    result = subprocess.run(["git", "--git-dir", str(root / initial["remote"]), "rev-parse", "--verify", "-q",
+                             f"refs/heads/{branch}"], capture_output=True, text=True)
+    return result.stdout.strip()
 
 
 def first(text, patterns):
@@ -100,6 +129,12 @@ def affirmed(pattern, text):
     return False
 
 
+def list_items(text):
+    """The description's list items, in order, with their continuation lines."""
+    return "\n".join(re.findall(r"^[ \t]*(?:\d+[.)]|[-*])[ \t].*(?:\n(?![ \t]*\n)(?![ \t]*(?:\d+[.)]|[-*])[ \t]).*)*",
+                                text, re.M))
+
+
 def near(text, anchor, pattern, window=300):
     for match in re.finditer(anchor, text, re.I):
         context = text[max(0, match.start() - window):match.end() + window]
@@ -117,8 +152,46 @@ def assess(root, check, events):
                      r"|\bgh\s+api\b[^\n]*(?:-X\s*(?:POST|PATCH|PUT)|--method\s+(?:POST|PATCH|PUT))")
         return not any(re.search(forbidden, c) for c in commands(events))
     if check == "history-unchanged":
-        refs = git(root, "for-each-ref", "--format=%(refname) %(objectname)").splitlines()
-        return refs == initial["refs"] and git(root, "rev-parse", "--abbrev-ref", "HEAD") == initial["branch"]
+        expected = [r for r in initial["refs"] if r.startswith(("refs/heads/", "refs/tags/"))]
+        return heads(root) == expected and git(root, "rev-parse", "--abbrev-ref", "HEAD") == initial["branch"]
+    if check == "no-merge":
+        forbidden = (r"\bgh\s+pr\s+(?:merge|edit|close)\b|\bgh\s+api\b|git\s+push\b[^\n]*(?:--force|-f\b|\bmain\b)")
+        return not any(re.search(forbidden, c) for c in commands(events))
+    if check == "pushed":
+        return remote_head(root, initial, initial["branch"]) == initial["head"]
+    if check == "not-pushed":
+        return not remote_head(root, initial, initial["branch"]) and not opened(root)
+    if check == "pr-created":
+        record = opened(root)
+        return record.get("head") == initial["branch"] and record.get("base") == "main"
+    if check == "body-file-used":
+        return opened(root).get("body_source") == "file"
+    if check == "asks-to-open":
+        reply = (root.parent / "response.txt").read_text() if (root.parent / "response.txt").exists() else ""
+        return any("?" in s and re.search(r"\b(?:open|create|push|raise|submit)\w*\b", s, re.I)
+                   for s in sentences(reply))
+    if check == "estimate-offered":
+        written = [p.read_text() for p in root.rglob("*.md")
+                   if ".git" not in p.parts and ".agents" not in p.parts
+                   and git(root, "status", "--porcelain", "--", str(p.relative_to(root))).startswith("??")]
+        everything = "\n".join(written + [messages(root, events)])
+        lines = sum(initial["core"].values())
+        return any(lines / 800 * 60 <= m <= lines / 100 * 60 + 30 for m in minutes(everything))
+    if check == "risk-first":
+        items = list_items(text)
+        risky, guide = first(items, [r"money\.py"]), first(items, [r"money-guide\.md"])
+        return risky is not None and (guide is None or risky < guide)
+    if check == "risk-named":
+        return near(text, r"money\.py|Decimal\(value\)", r"float|binary|inexact|precision|str\(", window=400)
+    if check == "checks-honest":
+        everything = text + "\n" + messages(root, events)
+        unrun = r"not\s+(?:installed|available|run|been\s+run)|(?:could|can)\s*n.t\s+run|(?:could|can)not\s+run" \
+                r"|unable\s+to\s+run|did\s*n.t\s+run|did\s+not\s+run|without\s+running|unverified|untested"
+        return bool(re.search(unrun, everything, re.I)) and not affirmed(r"\b(?:tests?|go\s+test)\b[^.\n]{0,30}\bpass", everything)
+    if check == "template-followed":
+        positions = [text.find(h) for h in TEMPLATE_HEADINGS]
+        return (all(p >= 0 for p in positions) and positions == sorted(positions)
+                and all(re.search(item, text) for item in TEMPLATE_ITEMS))
     if check == "tree-clean":
         return git(root, "status", "--porcelain") == initial["status"]
     if check == "body-written":
@@ -139,14 +212,13 @@ def assess(root, check, events):
             context = text[max(0, match.start() - 150):match.end() + 150]
             if (any(0.65 * target <= n <= 1.35 * target for target in targets)
                     and not re.match(r"\s*(?:files?|packages?|tests?|modules?|min|hours?|%)", after, re.I)
-                    and re.search(r"core|rounding|behavio", context, re.I)):
+                    and re.search(CORE_WORDS.get(initial["case"], r"core|rounding|behavio"), context, re.I)):
                 return True
         return False
     if check == "core-first":
         # The reading order is in the description's list items; a summary
         # paragraph or size table may name the parts in any order.
-        items = "\n".join(re.findall(r"^[ \t]*(?:\d+[.)]|[-*])[ \t].*(?:\n(?![ \t]*\n)(?![ \t]*(?:\d+[.)]|[-*])[ \t]).*)*",
-                                     text, re.M))
+        items = list_items(text)
         core = first(items, [r"rounding\.py", r"invoice\.py", r"test_rounding\.py"])
         mechanical = first(items, [r"uv\.lock"])
         return core is not None and (mechanical is None or core < mechanical)
@@ -154,7 +226,8 @@ def assess(root, check, events):
         return bool(re.search(r"sed\s+-i|--word-diff|--color-moved|ignore-all-space|git\s+diff\b[^\n]*\s-w\b"
                               r"|re-?run(?:ning)?\s+the\s+(?:rename|sed|command|script)", text, re.I))
     if check == "generated-deferred":
-        windows = [text[max(0, m.start() - 300):m.end() + 300] for m in re.finditer(r"uv\.lock", text, re.I)]
+        anchor = GENERATED.get(initial["case"], r"uv\.lock")
+        windows = [text[max(0, m.start() - 300):m.end() + 300] for m in re.finditer(anchor, text, re.I)]
         deferred = r"generat|uv\s+lock|skip|skim|no\s+need|need\s+not|don.t\s+need|not\s+(?:be\s+)?(?:reviewed|read)" \
                    r"|(?:no|not|without)\s+(?:reading\s+|reviewing\s+)?line[- ]by[- ]line|without\s+(?:reading|reviewing)"
         demanded = r"\b(?:review|read|check)\w*\b[^.\n]{0,40}\b(?:carefully|line[- ]by[- ]line|every\s+line|each\s+line)"

@@ -1,0 +1,7 @@
+name: open-pr
+runner: codex
+skill: pull-requests
+scaffold_script: scaffold.sh
+requires_fixture_git: true
+path_prepend:
+  - ../stubs
