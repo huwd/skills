@@ -16,7 +16,7 @@ advice to split it.
 
 | Case | With skill | Without skill |
 | ---- | ---------- | ------------- |
-| `large-mixed` | 1.00, 1.00, 1.00 | 0.38, 0.38, 0.38 |
+| `large-mixed` | 1.00, 1.00, 1.00 | 0.44, 0.44, 0.44 |
 | `oversized` | 1.00, 1.00, 1.00 | 0.60, 0.60, 0.60 |
 | `small-fix` | 1.00, 1.00, 1.00 | 1.00, 1.00, 1.00 |
 | `explain-branch` | 1.00, 1.00, 1.00 | 1.00, 1.00, 1.00 |
@@ -88,11 +88,22 @@ both arms was re-scored:
 
 Neither correction changed a baseline score.
 
+After merging, known-bad descriptions showed five more weaknesses: an
+implausible estimate, a coincidental number, a request to review the
+lockfile line by line and a declined split all passed, and declining a
+split failed `no-split`. Each now has a control and a fix; see the
+[suite's check notes](../evals/pull-requests/README.md#what-the-checks-cannot-show).
+`large-mixed` also gained `no-split`, which the first draft fails in all
+three runs, scoring 0.89, and the current version passes. The extra check
+moved the baseline's `large-mixed` score from 0.38 to 0.44. Re-scoring
+every saved run with the stricter checks changed no other result.
+
 ## Limits
 
-- The description checks are patterns. `review-estimate` does not judge
-  whether an estimate is sensible, and `split-proposed` does not judge the
-  proposed groups. The descriptions were read by hand for this report.
+- The description checks are patterns. `review-estimate` checks that an
+  estimate is in a plausible range, not how it was reached, and
+  `split-proposed` does not judge the proposed groups. The descriptions
+  were read by hand for this report.
 - Three runs per arm on one model is a small sample.
 - The fixtures are synthetic Python, without a pull request template, a
   remote or an existing pull request. Opening a pull request, and asking

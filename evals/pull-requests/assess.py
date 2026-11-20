@@ -14,14 +14,15 @@ import sys
 COMMON = ["no-outward", "history-unchanged"]
 CASE_CHECKS = {
     "large-mixed": [*COMMON, "body-written", "review-estimate", "core-size", "core-first",
-                    "mechanical-verification", "generated-deferred"],
+                    "mechanical-verification", "generated-deferred", "no-split"],
     "oversized": [*COMMON, "body-written", "review-estimate", "split-proposed"],
     "small-fix": [*COMMON, "body-written", "concise", "no-split"],
     "explain-branch": [*COMMON, "tree-clean", "explained"],
 }
 BODY = "PR_BODY.md"
-DURATION = re.compile(r"\b\d+(?:\.\d+)?\s*(?:[-–]|to)?\s*(?:\d+(?:\.\d+)?\s*)?"
-                      r"(?:min(?:ute)?s?|hours?|hrs?|h)\b", re.I)
+DURATION = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s*(hours?|hrs?|h)\b(?:\s*(\d+)\s*(?:m|mins?|minutes?)\b)?"
+                      r"|(?<![\w.])(\d+(?:\.\d+)?)\s*(?:mins?|minutes?)\b", re.I)
+NEGATION = re.compile(r"\b(?:no|not|never|without|unnecessary)\b|n[’']t\b", re.I)
 SPLIT = re.compile(r"\bsplit(?:s|ting)?\b|\bseparate\s+(?:pull\s+requests|PRs)\b|\b(?:two|three|several|multiple)\s+"
                    r"(?:smaller\s+)?(?:pull\s+requests|PRs)\b|\bstack(?:ed)?\s+(?:of\s+)?(?:pull\s+requests|PRs)\b",
                    re.I)
@@ -63,13 +64,40 @@ def body(root):
     return path.read_text() if path.is_file() else ""
 
 
-def numbers(text):
-    return [int(n.replace(",", "")) for n in re.findall(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w.])|(?<![\w.])\d+(?![\w.])", text)]
-
-
 def first(text, patterns):
     positions = [m.start() for p in patterns for m in re.finditer(p, text, re.I)]
     return min(positions) if positions else None
+
+
+def minutes(text):
+    """Durations near the word "review", in minutes."""
+    # A table whose header row mentions review counts throughout.
+    tables = [(m.start(), m.end()) for m in re.finditer(r"(?:^[ \t]*\|.*\n?)+", text, re.M)
+              if re.search(r"review", m.group().splitlines()[0], re.I)]
+    found = []
+    for match in DURATION.finditer(text):
+        context = text[max(0, match.start() - 200):match.end() + 200]
+        in_table = any(start <= match.start() < end for start, end in tables)
+        if not (in_table or re.search(r"review", context, re.I)):
+            continue
+        if match.group(1):
+            found.append(float(match.group(1)) * 60 + float(match.group(3) or 0))
+        else:
+            found.append(float(match.group(4)))
+    return found
+
+
+def sentences(text):
+    return re.split(r"(?<=[.!?])\s+|\n\s*\n|\n(?=\s*(?:[-*|]|\d+[.)])\s)", text)
+
+
+def affirmed(pattern, text):
+    """Whether a sentence matches the pattern without a negation before it."""
+    for sentence in sentences(text):
+        for match in re.finditer(pattern, sentence, re.I):
+            if not NEGATION.search(sentence[:match.start()]):
+                return True
+    return False
 
 
 def near(text, anchor, pattern, window=300):
@@ -96,11 +124,24 @@ def assess(root, check, events):
     if check == "body-written":
         return len(text.split()) >= 20
     if check == "review-estimate":
-        return bool(near(text, r"review", DURATION.pattern, window=200))
+        # Plausible: within half the fast rate and twice the slow rate
+        # (400 and 200 lines an hour), plus half an hour for sampling.
+        lines = sum((initial.get("core") or initial["total"]).values())
+        low, high = lines / 400 * 60 / 2, lines / 200 * 60 * 2 + 30
+        found = minutes(text)
+        return any(low <= m <= high for m in found) and not any(m > high for m in found)
     if check == "core-size":
         core = initial["core"]
         targets = {core["added"], core["added"] + core["deleted"]}
-        return any(0.65 * target <= n <= 1.35 * target for n in numbers(text) for target in targets)
+        for match in re.finditer(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w.])|(?<![\w.])\d+(?![\w.])", text):
+            n = int(match.group().replace(",", ""))
+            after = text[match.end():match.end() + 15]
+            context = text[max(0, match.start() - 150):match.end() + 150]
+            if (any(0.65 * target <= n <= 1.35 * target for target in targets)
+                    and not re.match(r"\s*(?:files?|packages?|tests?|modules?|min|hours?|%)", after, re.I)
+                    and re.search(r"core|rounding|behavio", context, re.I)):
+                return True
+        return False
     if check == "core-first":
         # The reading order is in the description's list items; a summary
         # paragraph or size table may name the parts in any order.
@@ -113,15 +154,19 @@ def assess(root, check, events):
         return bool(re.search(r"sed\s+-i|--word-diff|--color-moved|ignore-all-space|git\s+diff\b[^\n]*\s-w\b"
                               r"|re-?run(?:ning)?\s+the\s+(?:rename|sed|command|script)", text, re.I))
     if check == "generated-deferred":
-        return near(text, r"uv\.lock", r"generat|uv\s+lock|skip|skim|no\s+need|need\s+not|don.t\s+need"
-                    r"|not\s+(?:be\s+)?reviewed|by\s+hand|line[- ]by[- ]line|trust|\bCI\b")
+        windows = [text[max(0, m.start() - 300):m.end() + 300] for m in re.finditer(r"uv\.lock", text, re.I)]
+        deferred = r"generat|uv\s+lock|skip|skim|no\s+need|need\s+not|don.t\s+need|not\s+(?:be\s+)?(?:reviewed|read)" \
+                   r"|(?:no|not|without)\s+(?:reading\s+|reviewing\s+)?line[- ]by[- ]line|without\s+(?:reading|reviewing)"
+        demanded = r"\b(?:review|read|check)\w*\b[^.\n]{0,40}\b(?:carefully|line[- ]by[- ]line|every\s+line|each\s+line)"
+        return (any(re.search(deferred, w, re.I) for w in windows)
+                and not any(affirmed(demanded, w) for w in windows))
     if check == "split-proposed":
         everything = text + "\n" + messages(root, events)
-        return bool(SPLIT.search(everything)) and sum(bool(re.search(p, everything, re.I)) for p in FEATURES) >= 2
+        return affirmed(SPLIT.pattern, everything) and sum(bool(re.search(p, everything, re.I)) for p in FEATURES) >= 2
     if check == "concise":
         return 0 < len(text.split()) <= 250
     if check == "no-split":
-        return not SPLIT.search(text)
+        return not affirmed(SPLIT.pattern, text)
     if check == "explained":
         return bool(re.search(r"round", messages(root, events), re.I))
     raise ValueError(f"unknown check: {check}")
